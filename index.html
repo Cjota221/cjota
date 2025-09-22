@@ -160,7 +160,7 @@
             </div>
 
             <!-- Gráficos -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div id="charts-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
                     <h3 class="font-semibold text-gray-700 text-center mb-2">Principal motivo de não comprar</h3>
                     <canvas id="churn-chart"></canvas>
@@ -178,9 +178,12 @@
                     <canvas id="retention-chart"></canvas>
                 </div>
             </div>
+             <div id="no-data-message" class="hidden text-center py-12">
+                <p class="text-gray-500 text-lg">Ainda não há dados para exibir. Responda o questionário para ver os resultados aqui.</p>
+            </div>
 
             <!-- Lista de Respondentes -->
-            <div class="mt-12">
+            <div id="respondents-section" class="mt-12">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Lista de Respondentes</h3>
                 <div class="bg-gray-50 rounded-lg shadow-inner max-h-80 overflow-y-auto">
                     <table class="w-full text-left">
@@ -250,8 +253,8 @@
         let currentUserInfo = {};
         let userAnswers = [];
         let history = []; // Armazena o histórico de navegação
-        let totalRespondents = 0; // Para simular um total de pessoas que iniciaram
-        let completedRespondents = []; // Armazena todas as respostas completas
+        let totalRespondents = 0;
+        let completedRespondents = [];
         let charts = {}; // Para armazenar instâncias dos gráficos
 
         // --- FUNÇÕES DO QUESTIONÁRIO ---
@@ -277,17 +280,19 @@
         }
         
         function startQuiz() {
+            totalRespondents = parseInt(localStorage.getItem('cjQuizTotal') || '0');
             totalRespondents++;
-            history = [0]; // Inicia o histórico com a primeira pergunta
+            localStorage.setItem('cjQuizTotal', totalRespondents);
+            
+            history = [0];
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('question-screen').classList.remove('hidden');
             showQuestion();
         }
 
         function showQuestion() {
-            // Limpa o estado anterior
             document.getElementById('question-card').classList.remove('fade-in');
-            void document.getElementById('question-card').offsetWidth; // Força reflow para reiniciar a animação
+            void document.getElementById('question-card').offsetWidth;
             document.getElementById('question-card').classList.add('fade-in');
 
             const questionData = quizData[currentQuestionIndex];
@@ -303,7 +308,6 @@
             openEndedContainer.classList.add('hidden');
             nextButton.classList.add('hidden');
 
-            // Controla a visibilidade do botão de voltar
             if (history.length > 1) {
                 backButton.classList.remove('hidden');
             } else {
@@ -330,14 +334,11 @@
             const currentQuestion = quizData[currentQuestionIndex];
             userAnswers.push({ question: currentQuestion.question, answer: option, id: currentQuestion.id });
 
-            // Lógica Condicional
             let nextIndex;
             const conditionalQuestion = quizData.find(q => q.parentId === currentQuestion.id && q.trigger === option);
             if (conditionalQuestion) {
-                const index = quizData.indexOf(conditionalQuestion);
-                nextIndex = index;
+                nextIndex = quizData.indexOf(conditionalQuestion);
             } else {
-                 // Pula para a próxima pergunta não-condicional
                 let tempIndex = currentQuestionIndex + 1;
                 while(quizData[tempIndex] && quizData[tempIndex].parentId) {
                     tempIndex++;
@@ -346,10 +347,10 @@
             }
 
             currentQuestionIndex = nextIndex;
-            history.push(currentQuestionIndex); // Adiciona o novo índice ao histórico
+            history.push(currentQuestionIndex);
 
             if (currentQuestionIndex < quizData.length) {
-                setTimeout(showQuestion, 300); // Pequeno delay para efeito visual
+                setTimeout(showQuestion, 300);
             } else {
                 endQuiz();
             }
@@ -362,7 +363,7 @@
                 userAnswers.push({ question: currentQuestion.question, answer: answer || "N/A", id: currentQuestion.id });
             }
             currentQuestionIndex++;
-            history.push(currentQuestionIndex); // Adiciona o novo índice ao histórico
+            history.push(currentQuestionIndex);
 
             if (currentQuestionIndex < quizData.length) {
                 showQuestion();
@@ -372,14 +373,13 @@
         }
 
         function endQuiz() {
-            // Salva uma cópia das respostas junto com os dados do usuário
             completedRespondents.push({ userInfo: currentUserInfo, answers: [...userAnswers] }); 
+            localStorage.setItem('cjQuizResponses', JSON.stringify(completedRespondents));
             
-            // Reseta para o próximo usuário
             userAnswers = []; 
             currentUserInfo = {};
             currentQuestionIndex = 0;
-            history = []; // Limpa o histórico
+            history = [];
 
             document.getElementById('question-screen').classList.add('hidden');
             document.getElementById('end-screen').classList.remove('hidden');
@@ -396,12 +396,12 @@
         }
 
         function goBack() {
-            if (history.length <= 1) return; // Não pode voltar da primeira pergunta
+            if (history.length <= 1) return;
 
-            userAnswers.pop(); // Remove a última resposta
-            history.pop(); // Remove o índice atual do histórico
+            userAnswers.pop();
+            history.pop();
 
-            currentQuestionIndex = history[history.length - 1]; // Pega o índice anterior
+            currentQuestionIndex = history[history.length - 1];
 
             showQuestion();
         }
@@ -417,7 +417,6 @@
         function hideDashboard() {
             document.getElementById('dashboard-container').classList.add('hidden');
             document.getElementById('quiz-container').classList.remove('hidden');
-            // Resetar o quiz ao voltar
             document.getElementById('question-screen').classList.add('hidden');
             document.getElementById('end-screen').classList.add('hidden');
             document.getElementById('start-screen').classList.remove('hidden');
@@ -425,17 +424,21 @@
         }
 
         function setupDashboard() {
-            if (completedRespondents.length === 0) {
-                 // Simular dados se não houver respostas
-                completedRespondents = [
-                    { userInfo: { name: "Maria Silva", phone: "62999998888"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Preço"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Satisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Pagar menos no produto e arcar com o frete"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Média"}]},
-                    { userInfo: { name: "Joana Pereira", phone: "62988887777"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Produto não atendia às minhas necessidades"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Muito satisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Pagar um pouco a mais no produto e receber frete grátis"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Muito alta"}]},
-                    { userInfo: { name: "Ana Costa", phone: "62977776666"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Preço"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Insatisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Não tenho preferência"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Baixa"}]}
-                ];
-                totalRespondents = 5; // Simular que 5 começaram
-            }
+            const hasData = completedRespondents.length > 0;
+
+            document.getElementById('charts-grid').style.display = hasData ? 'grid' : 'none';
+            document.getElementById('respondents-section').style.display = hasData ? 'block' : 'none';
+            document.getElementById('no-data-message').style.display = hasData ? 'none' : 'block';
+
+            if (!hasData) {
+                document.getElementById('total-responses').innerText = '0';
+                document.getElementById('completion-rate').innerText = '0%';
+                document.getElementById('avg-satisfaction').innerText = 'N/A';
+                return;
+            };
 
             // Métricas Principais
+            totalRespondents = parseInt(localStorage.getItem('cjQuizTotal') || '0');
             document.getElementById('total-responses').innerText = completedRespondents.length;
             const completionRate = totalRespondents > 0 ? ((completedRespondents.length / totalRespondents) * 100).toFixed(1) : 0;
             document.getElementById('completion-rate').innerText = `${completionRate}%`;
@@ -453,31 +456,22 @@
             const avgSatisfaction = satisfactionCount > 0 ? (totalScore / satisfactionCount).toFixed(2) : 'N/A';
             document.getElementById('avg-satisfaction').innerText = avgSatisfaction;
 
-
-            // Configurar Gráficos
             setupChart('churn-chart', 'pie', 5, 'Principal motivo de não comprar');
             setupChart('satisfaction-chart', 'doughnut', 6, 'Satisfação com o produto');
             setupChart('shipping-chart', 'bar', 9, 'Preferência de Frete');
             setupChart('retention-chart', 'pie', 15, 'Chance de voltar a comprar');
             
-            // Popular lista de respondentes
             const respondentsListBody = document.getElementById('respondents-list');
-            respondentsListBody.innerHTML = ''; // Limpar lista antiga
-            if (completedRespondents.length > 0 && completedRespondents[0].userInfo) {
-                completedRespondents.forEach(resp => {
-                    const row = document.createElement('tr');
-                    row.className = "border-b border-gray-200";
-                    row.innerHTML = `
-                        <td class="p-3 text-sm">${resp.userInfo.name}</td>
-                        <td class="p-3 text-sm">${resp.userInfo.phone}</td>
-                    `;
-                    respondentsListBody.appendChild(row);
-                });
-            } else {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td colspan="2" class="p-3 text-center text-gray-500">Nenhuma resposta ainda.</td>`;
-                    respondentsListBody.appendChild(row);
-            }
+            respondentsListBody.innerHTML = '';
+            completedRespondents.forEach(resp => {
+                const row = document.createElement('tr');
+                row.className = "border-b border-gray-200";
+                row.innerHTML = `
+                    <td class="p-3 text-sm">${resp.userInfo.name}</td>
+                    <td class="p-3 text-sm">${resp.userInfo.phone}</td>
+                `;
+                respondentsListBody.appendChild(row);
+            });
         }
 
         function setupChart(canvasId, type, questionId, label) {
@@ -536,6 +530,11 @@
                 });
             }
 
+            if (dataToExport.length === 0) {
+                alert("Não há dados para exportar com o filtro selecionado.");
+                return;
+            }
+
             let csvContent = "data:text/csv;charset=utf-8,";
             
             const baseHeaders = quizData.filter(q => !q.parentId).map(q => `"${q.question}"`);
@@ -565,6 +564,12 @@
 
         // --- INICIALIZAÇÃO ---
         window.onload = () => {
+            const savedResponses = localStorage.getItem('cjQuizResponses');
+            if (savedResponses) {
+                completedRespondents = JSON.parse(savedResponses);
+            }
+            totalRespondents = parseInt(localStorage.getItem('cjQuizTotal') || '0');
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('admin') === 'true') {
                 showDashboard();
@@ -574,5 +579,4 @@
     </script>
 </body>
 </html>
-
 
