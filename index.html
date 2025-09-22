@@ -6,6 +6,7 @@
     <title>Pesquisa e Análise - CJ Rasteirinhas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -33,6 +34,26 @@
             box-shadow: 0 0 0 3px rgba(220, 46, 218, 0.4);
             border-color: #dc2eda;
         }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #dc2eda;
+            width: 40px;
+            height: 40px;
+            -webkit-animation: spin 2s linear infinite; /* Safari */
+            animation: spin 2s linear infinite;
+        }
+
+        /* Safari */
+        @-webkit-keyframes spin {
+          0% { -webkit-transform: rotate(0deg); }
+          100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
@@ -51,6 +72,19 @@
             <button onclick="submitUserInfo()" class="w-full mt-4 bg-primary text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
                 Continuar
             </button>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes da Resposta -->
+    <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl text-left fade-in max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                 <h2 id="details-modal-title" class="text-xl font-bold text-gray-800">Respostas de: </h2>
+                 <button onclick="closeDetailsModal()" class="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            </div>
+            <div id="details-modal-content" class="overflow-y-auto space-y-3 pr-2">
+                <!-- Conteúdo inserido via JS -->
+            </div>
         </div>
     </div>
 
@@ -102,20 +136,26 @@
 
                 <!-- Tela Final -->
                 <div id="end-screen" class="hidden text-center fade-in">
-                    <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-40 mb-6">
-                    <h2 class="text-2xl font-bold text-primary">Muito Obrigado!</h2>
-                    <p class="text-gray-700 mt-4 mb-6 text-lg">Sua participação nos ajuda a melhorar cada vez mais. Como agradecimento, preparamos um presente especial para você!</p>
-                    
-                    <div class="bg-gray-50 border-2 border-dashed border-primary rounded-lg p-6">
-                        <h3 class="font-bold text-xl text-gray-800 mb-2">Seu Presente Duplo Exclusivo!</h3>
-                        <p class="text-gray-600">Você ganhou! Entre em contato conosco pelo WhatsApp para resgatar seu prêmio:</p>
-                        <div class="text-left my-4 p-4 bg-white rounded-lg shadow-inner">
-                            <p class="mb-2">✅ <span class="font-semibold">Cupom de R$50,00</span> em compras acima de R$300,00.</p>
-                            <p>✅ Uma <span class="font-semibold">linda rasteirinha</span> na sua próxima compra.</p>
+                    <div id="saving-state" class="hidden flex flex-col items-center justify-center">
+                        <div class="loader"></div>
+                        <p class="text-gray-600 mt-4">Salvando suas respostas...</p>
+                    </div>
+                    <div id="saved-state">
+                        <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-40 mb-6">
+                        <h2 class="text-2xl font-bold text-primary">Muito Obrigado!</h2>
+                        <p class="text-gray-700 mt-4 mb-6 text-lg">Sua participação nos ajuda a melhorar cada vez mais. Como agradecimento, preparamos um presente especial para você!</p>
+                        
+                        <div class="bg-gray-50 border-2 border-dashed border-primary rounded-lg p-6">
+                            <h3 class="font-bold text-xl text-gray-800 mb-2">Seu Presente Duplo Exclusivo!</h3>
+                            <p class="text-gray-600">Você ganhou! Entre em contato conosco pelo WhatsApp para resgatar seu prêmio:</p>
+                            <div class="text-left my-4 p-4 bg-white rounded-lg shadow-inner">
+                                <p class="mb-2">✅ <span class="font-semibold">Cupom de R$50,00</span> em compras acima de R$300,00.</p>
+                                <p>✅ Uma <span class="font-semibold">linda rasteirinha</span> na sua próxima compra.</p>
+                            </div>
+                            <a href="https://wa.me/5562981480687?text=Olá!%20Respondi%20o%20questionário%20e%20quero%20resgatar%20o%20meu%20presente!" target="_blank" class="inline-block mt-4 bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-600 transform hover:scale-105 transition-transform duration-300">
+                                Resgatar no WhatsApp
+                            </a>
                         </div>
-                        <a href="https://wa.me/5562981480687?text=Olá!%20Respondi%20o%20questionário%20e%20quero%20resgatar%20o%20meu%20presente!" target="_blank" class="inline-block mt-4 bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-600 transform hover:scale-105 transition-transform duration-300">
-                            Resgatar no WhatsApp
-                        </a>
                     </div>
                 </div>
             </div>
@@ -150,8 +190,8 @@
                     <p id="total-responses" class="text-3xl font-bold text-primary">0</p>
                 </div>
                  <div class="bg-gray-100 p-4 rounded-lg text-center">
-                    <h3 class="text-gray-600 text-sm font-semibold">Taxa de Conclusão</h3>
-                    <p id="completion-rate" class="text-3xl font-bold text-primary">0%</p>
+                    <h3 class="text-gray-600 text-sm font-semibold">Respostas Coletadas</h3>
+                    <p id="completion-rate" class="text-3xl font-bold text-primary">0</p>
                 </div>
                  <div class="bg-gray-100 p-4 rounded-lg text-center">
                     <h3 class="text-gray-600 text-sm font-semibold">Satisfação Média</h3>
@@ -179,7 +219,8 @@
                 </div>
             </div>
              <div id="no-data-message" class="hidden text-center py-12">
-                <p class="text-gray-500 text-lg">Ainda não há dados para exibir. Responda o questionário para ver os resultados aqui.</p>
+                <div class="loader mx-auto"></div>
+                <p class="text-gray-500 text-lg mt-4">Carregando dados...</p>
             </div>
 
             <!-- Lista de Respondentes -->
@@ -191,6 +232,7 @@
                             <tr>
                                 <th class="p-3 font-semibold text-sm">Nome</th>
                                 <th class="p-3 font-semibold text-sm">Telefone</th>
+                                <th class="p-3 font-semibold text-sm">Data</th>
                             </tr>
                         </thead>
                         <tbody id="respondents-list">
@@ -202,8 +244,17 @@
 
         </div>
     </div>
+    
+    <script type="module">
+        // --- CONFIGURAÇÃO DO SUPABASE ---
+        const SUPABASE_URL = 'https://glzxljkvwccnfggvsirx.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsenhsamt2d2NjbmZnZ3ZzaXJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NzE0MDMsImV4cCI6MjA3NDE0NzQwM30.H2Elc78XcuhaE_ehg7uVmU3HhX1KhZuSDZRXlQ_Fun0';
 
-    <script>
+        // --- INICIALIZAÇÃO DO CLIENTE SUPABASE ---
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
         // --- ESTRUTURA DO QUESTIONÁRIO ---
         const quizData = [
             // Seção 1: Lembrança e histórico de compras
@@ -252,13 +303,22 @@
         let currentQuestionIndex = 0;
         let currentUserInfo = {};
         let userAnswers = [];
-        let history = []; // Armazena o histórico de navegação
-        let totalRespondents = 0;
+        let history = []; 
         let completedRespondents = [];
-        let charts = {}; // Para armazenar instâncias dos gráficos
+        let charts = {};
+        
+        // --- FUNÇÕES GLOBAIS ---
+        window.showUserInfoModal = showUserInfoModal;
+        window.submitUserInfo = submitUserInfo;
+        window.goBack = goBack;
+        window.handleNext = handleNext;
+        window.selectOption = selectOption;
+        window.hideDashboard = hideDashboard;
+        window.downloadResults = downloadResults;
+        window.openDetailsModal = openDetailsModal;
+        window.closeDetailsModal = closeDetailsModal;
 
         // --- FUNÇÕES DO QUESTIONÁRIO ---
-
         function showUserInfoModal() {
             document.getElementById('user-info-modal').classList.remove('hidden');
         }
@@ -280,10 +340,6 @@
         }
         
         function startQuiz() {
-            totalRespondents = parseInt(localStorage.getItem('cjQuizTotal') || '0');
-            totalRespondents++;
-            localStorage.setItem('cjQuizTotal', totalRespondents);
-            
             history = [0];
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('question-screen').classList.remove('hidden');
@@ -372,17 +428,32 @@
             }
         }
 
-        function endQuiz() {
-            completedRespondents.push({ userInfo: currentUserInfo, answers: [...userAnswers] }); 
-            localStorage.setItem('cjQuizResponses', JSON.stringify(completedRespondents));
-            
-            userAnswers = []; 
-            currentUserInfo = {};
-            currentQuestionIndex = 0;
-            history = [];
-
+        async function endQuiz() {
             document.getElementById('question-screen').classList.add('hidden');
             document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('saved-state').classList.add('hidden');
+            document.getElementById('saving-state').classList.remove('hidden');
+
+            try {
+                const { error } = await supabaseClient
+                    .from('quiz_responses')
+                    .insert([{ 
+                        user_info: currentUserInfo, 
+                        answers: userAnswers 
+                    }]);
+                
+                if (error) throw error;
+
+            } catch(error) {
+                console.error("Erro ao salvar no Supabase: ", error.message);
+            } finally {
+                userAnswers = []; 
+                currentUserInfo = {};
+                currentQuestionIndex = 0;
+                history = [];
+                document.getElementById('saving-state').classList.add('hidden');
+                document.getElementById('saved-state').classList.remove('hidden');
+            }
         }
         
         function updateProgressBar() {
@@ -397,21 +468,32 @@
 
         function goBack() {
             if (history.length <= 1) return;
-
             userAnswers.pop();
             history.pop();
-
             currentQuestionIndex = history[history.length - 1];
-
             showQuestion();
         }
 
         // --- FUNÇÕES DO PAINEL ---
 
-        function showDashboard() {
+        async function showDashboard() {
             document.getElementById('quiz-container').classList.add('hidden');
             document.getElementById('dashboard-container').classList.remove('hidden');
+            
+            const { data, error } = await supabaseClient
+                .from('quiz_responses')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if(error) {
+                console.error("Erro ao buscar dados: ", error.message);
+                 const noDataMsg = document.getElementById('no-data-message');
+                noDataMsg.innerHTML = `<p class="text-red-500 text-lg">Erro ao carregar os dados. Verifique o console.</p>`;
+                return;
+            }
+            completedRespondents = data;
             setupDashboard();
+            listenToRealtimeResponses();
         }
         
         function hideDashboard() {
@@ -423,25 +505,30 @@
             updateProgressBar();
         }
 
+        function listenToRealtimeResponses() {
+            supabaseClient
+                .channel('public:quiz_responses')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'quiz_responses' }, (payload) => {
+                    completedRespondents.unshift(payload.new);
+                    setupDashboard();
+                })
+                .subscribe();
+        }
+
         function setupDashboard() {
             const hasData = completedRespondents.length > 0;
 
             document.getElementById('charts-grid').style.display = hasData ? 'grid' : 'none';
             document.getElementById('respondents-section').style.display = hasData ? 'block' : 'none';
-            document.getElementById('no-data-message').style.display = hasData ? 'none' : 'block';
+            
+            const noDataMsg = document.getElementById('no-data-message');
+            noDataMsg.style.display = hasData ? 'none' : 'block';
+            if (!hasData) noDataMsg.innerHTML = `<p class="text-gray-500 text-lg">Ainda não há dados para exibir.</p>`;
 
-            if (!hasData) {
-                document.getElementById('total-responses').innerText = '0';
-                document.getElementById('completion-rate').innerText = '0%';
-                document.getElementById('avg-satisfaction').innerText = 'N/A';
-                return;
-            };
 
             // Métricas Principais
-            totalRespondents = parseInt(localStorage.getItem('cjQuizTotal') || '0');
             document.getElementById('total-responses').innerText = completedRespondents.length;
-            const completionRate = totalRespondents > 0 ? ((completedRespondents.length / totalRespondents) * 100).toFixed(1) : 0;
-            document.getElementById('completion-rate').innerText = `${completionRate}%`;
+            document.getElementById('completion-rate').innerText = completedRespondents.length;
             
             const satisfactionScores = {"Muito satisfeito(a)": 3, "Satisfeito(a)": 2, "Insatisfeito(a)": 1};
             let totalScore = 0;
@@ -463,12 +550,15 @@
             
             const respondentsListBody = document.getElementById('respondents-list');
             respondentsListBody.innerHTML = '';
-            completedRespondents.forEach(resp => {
+            completedRespondents.forEach((resp, index) => {
                 const row = document.createElement('tr');
-                row.className = "border-b border-gray-200";
+                row.className = "border-b border-gray-200 cursor-pointer hover:bg-gray-100";
+                row.onclick = () => openDetailsModal(index);
+                const date = new Date(resp.created_at).toLocaleDateString('pt-BR');
                 row.innerHTML = `
-                    <td class="p-3 text-sm">${resp.userInfo.name}</td>
-                    <td class="p-3 text-sm">${resp.userInfo.phone}</td>
+                    <td class="p-3 text-sm">${resp.user_info.name}</td>
+                    <td class="p-3 text-sm">${resp.user_info.phone}</td>
+                    <td class="p-3 text-sm">${date}</td>
                 `;
                 respondentsListBody.appendChild(row);
             });
@@ -538,11 +628,11 @@
             let csvContent = "data:text/csv;charset=utf-8,";
             
             const baseHeaders = quizData.filter(q => !q.parentId).map(q => `"${q.question}"`);
-            const headers = `"Nome","Telefone",${baseHeaders.join(',')}`;
+            const headers = `"Nome","Telefone","Data",${baseHeaders.join(',')}`;
             csvContent += headers + "\r\n";
 
             dataToExport.forEach(responseSet => {
-                let row = [`"${responseSet.userInfo.name}"`, `"${responseSet.userInfo.phone}"`];
+                let row = [`"${responseSet.user_info.name}"`, `"${responseSet.user_info.phone}"`, `"${responseSet.created_at}"`];
                 quizData.forEach(q => {
                     if(!q.parentId) {
                         const answer = responseSet.answers.find(a => a.id === q.id);
@@ -562,13 +652,35 @@
             document.body.removeChild(link);
         }
 
+        // --- FUNÇÕES DO MODAL DE DETALHES ---
+        function openDetailsModal(index) {
+            const respondent = completedRespondents[index];
+            document.getElementById('details-modal-title').innerText = `Respostas de: ${respondent.user_info.name}`;
+            const contentDiv = document.getElementById('details-modal-content');
+            contentDiv.innerHTML = '';
+
+            respondent.answers.forEach(ans => {
+                const answerEl = document.createElement('div');
+                answerEl.className = 'bg-gray-100 p-3 rounded-lg';
+                answerEl.innerHTML = `
+                    <p class="font-semibold text-gray-700">${ans.question}</p>
+                    <p class="text-primary font-bold">${ans.answer}</p>
+                `;
+                contentDiv.appendChild(answerEl);
+            });
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
         // --- INICIALIZAÇÃO ---
         window.onload = () => {
-            const savedResponses = localStorage.getItem('cjQuizResponses');
-            if (savedResponses) {
-                completedRespondents = JSON.parse(savedResponses);
+            if (!SUPABASE_URL.includes('supabase.co')) {
+                document.body.innerHTML = '<div class="text-red-500 text-center p-8"><strong>Erro de Configuração:</strong> As variáveis SUPABASE_URL e SUPABASE_ANON_KEY precisam ser preenchidas no topo do script.</div>';
+                return;
             }
-            totalRespondents = parseInt(localStorage.getItem('cjQuizTotal') || '0');
 
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('admin') === 'true') {
