@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa e Análise - CJ Rasteirinhas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        /* Cores da marca CJ Rasteirinhas */
+        .bg-primary { background-color: #dc2eda; }
+        .bg-accent { background-color: #f2ea21; }
+        .text-primary { color: #dc2eda; }
+        .text-accent { color: #f2ea21; }
+        .border-primary { border-color: #dc2eda; }
+        .ring-primary:focus { ring-color: #dc2eda; }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+
+        textarea:focus, input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(220, 46, 218, 0.4);
+            border-color: #dc2eda;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Pop-up de Informações do Usuário -->
+    <div id="user-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md text-center fade-in">
+            <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-32 mb-4">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Só um instante...</h2>
+            <p class="text-gray-600 mb-6">Para garantir seu presente, por favor, preencha seus dados abaixo.</p>
+            <div class="space-y-4">
+                <input type="text" id="user-name" placeholder="Seu nome completo" class="w-full p-3 border-2 border-gray-300 rounded-lg transition-all duration-300">
+                <input type="tel" id="user-phone" placeholder="Seu WhatsApp (com DDD)" class="w-full p-3 border-2 border-gray-300 rounded-lg transition-all duration-300">
+            </div>
+             <p id="modal-error" class="text-red-500 text-sm mt-2 h-4"></p>
+            <button onclick="submitUserInfo()" class="w-full mt-4 bg-primary text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
+                Continuar
+            </button>
+        </div>
+    </div>
+
+
+    <div class="w-full max-w-4xl mx-auto">
+        <!-- Container do Questionário -->
+        <div id="quiz-container" class="bg-white rounded-xl shadow-2xl overflow-hidden">
+            <!-- Cabeçalho -->
+            <div class="p-6 bg-primary text-white text-center">
+                <h1 class="text-2xl md:text-3xl font-bold">Olá! Sentimos sua falta! 👋</h1>
+                <p class="mt-2 text-sm md:text-base">Sua opinião vale um presente incrível! Responda e garanta o seu.</p>
+            </div>
+
+            <div class="p-6 md:p-8">
+                <!-- Barra de Progresso -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                    <div id="progress-bar" class="bg-accent h-2.5 rounded-full" style="width: 0%; transition: width 0.3s ease-in-out;"></div>
+                </div>
+
+                <!-- Tela de Início -->
+                <div id="start-screen" class="text-center fade-in">
+                    <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-48 mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Sua opinião é muito importante para nós!</h2>
+                    <p class="text-gray-600 mb-8">Em menos de 2 minutos, sua opinião nos ajuda a melhorar e garante um presente duplo para você: <span class="font-bold text-primary">um cupom de R$50 E uma rasteirinha novinha!</span></p>
+                    <button onclick="showUserInfoModal()" class="w-full md:w-auto bg-primary text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
+                        Começar Agora!
+                    </button>
+                </div>
+                
+                <!-- Tela do Questionário -->
+                <div id="question-screen" class="hidden">
+                    <div id="question-card" class="fade-in">
+                        <p id="section-title" class="text-sm font-bold text-primary mb-2 text-center"></p>
+                        <h2 id="question-text" class="text-xl md:text-2xl font-semibold text-gray-800 mb-6 text-center"></h2>
+                        <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                        <div id="open-ended-container" class="mt-4 hidden">
+                             <textarea id="open-ended-input" rows="4" class="w-full p-3 border-2 border-gray-300 rounded-lg transition-all duration-300" placeholder="Sua opinião é valiosa..."></textarea>
+                        </div>
+                        <div class="flex justify-center items-center gap-4 mt-8">
+                            <button id="back-button" onclick="goBack()" class="bg-gray-200 text-gray-700 font-bold py-3 px-12 rounded-lg hover:bg-gray-300 transition-colors duration-300 hidden">
+                                Voltar
+                            </button>
+                            <button id="next-button" onclick="handleNext()" class="bg-primary text-white font-bold py-3 px-12 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300 hidden">
+                                Avançar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tela Final -->
+                <div id="end-screen" class="hidden text-center fade-in">
+                    <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-40 mb-6">
+                    <h2 class="text-2xl font-bold text-primary">Muito Obrigado!</h2>
+                    <p class="text-gray-700 mt-4 mb-6 text-lg">Sua participação nos ajuda a melhorar cada vez mais. Como agradecimento, preparamos um presente especial para você!</p>
+                    
+                    <div class="bg-gray-50 border-2 border-dashed border-primary rounded-lg p-6">
+                        <h3 class="font-bold text-xl text-gray-800 mb-2">Seu Presente Duplo Exclusivo!</h3>
+                        <p class="text-gray-600">Você ganhou! Entre em contato conosco pelo WhatsApp para resgatar seu prêmio:</p>
+                        <div class="text-left my-4 p-4 bg-white rounded-lg shadow-inner">
+                            <p class="mb-2">✅ <span class="font-semibold">Cupom de R$50,00</span> em compras acima de R$300,00.</p>
+                            <p>✅ Uma <span class="font-semibold">linda rasteirinha</span> na sua próxima compra.</p>
+                        </div>
+                        <a href="https://wa.me/5562981480687?text=Olá!%20Respondi%20o%20questionário%20e%20quero%20resgatar%20o%20meu%20presente!" target="_blank" class="inline-block mt-4 bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-600 transform hover:scale-105 transition-transform duration-300">
+                            Resgatar no WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container do Painel de Análise (Dashboard) -->
+        <div id="dashboard-container" class="hidden mt-8 bg-white rounded-xl shadow-2xl p-6 md:p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Painel de Análise</h2>
+                <button onclick="hideDashboard()" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <div class="flex justify-end mb-4">
+                 <button onclick="downloadResults()" class="bg-primary text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
+                    Exportar Dados (CSV)
+                </button>
+            </div>
+
+            <!-- Métricas Principais -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-gray-100 p-4 rounded-lg text-center">
+                    <h3 class="text-gray-600 text-sm font-semibold">Total de Respostas</h3>
+                    <p id="total-responses" class="text-3xl font-bold text-primary">0</p>
+                </div>
+                 <div class="bg-gray-100 p-4 rounded-lg text-center">
+                    <h3 class="text-gray-600 text-sm font-semibold">Taxa de Conclusão</h3>
+                    <p id="completion-rate" class="text-3xl font-bold text-primary">0%</p>
+                </div>
+                 <div class="bg-gray-100 p-4 rounded-lg text-center">
+                    <h3 class="text-gray-600 text-sm font-semibold">Satisfação Média</h3>
+                    <p id="avg-satisfaction" class="text-3xl font-bold text-primary">N/A</p>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="font-semibold text-gray-700 text-center mb-2">Principal motivo de não comprar</h3>
+                    <canvas id="churn-chart"></canvas>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-700 text-center mb-2">Satisfação com o produto</h3>
+                    <canvas id="satisfaction-chart"></canvas>
+                </div>
+                 <div>
+                    <h3 class="font-semibold text-gray-700 text-center mb-2">Preferência de Frete</h3>
+                    <canvas id="shipping-chart"></canvas>
+                </div>
+                 <div>
+                    <h3 class="font-semibold text-gray-700 text-center mb-2">Chance de voltar a comprar</h3>
+                    <canvas id="retention-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTRUTURA DO QUESTIONÁRIO ---
+        const quizData = [
+            // Seção 1: Lembrança e histórico de compras
+            { id: 1, section: "Lembrança e Histórico", question: "Você ainda trabalha com revendas de rasteirinhas femininas?", options: ["Sim", "Não"], type: "choice" },
+            { id: 2, section: "Lembrança e Histórico", question: "Você se lembra de ter comprado conosco antes?", options: ["Sim, várias vezes", "Sim, uma vez", "Não lembro"], type: "choice" },
+            { id: 3, section: "Lembrança e Histórico", question: "Qual tipo de calçado você mais vende?", options: ["Rasteirinhas", "Salto", "Papete / Flat", "Outros"], type: "choice" },
+            { id: 4, section: "Lembrança e Histórico", question: "Qual a faixa de preço média das suas compras?", options: ["Até R$200", "Entre R$201 e R$500", "Entre R$501 e R$1000", "Acima de R$1000"], type: "choice" },
+
+            // Seção 2: Motivos de não compra e satisfação
+            { 
+                id: 5,
+                section: "Motivos e Satisfação", 
+                question: "Qual o principal motivo de não ter comprado recentemente?", 
+                options: ["Preço", "Atendimento", "Produto não atendia às minhas necessidades", "Esqueci ou perdi contato"], 
+                type: "choice" 
+            },
+             // Pergunta Condicional
+            { 
+                id: 5.1,
+                parentId: 5,
+                trigger: "Produto não atendia às minhas necessidades",
+                section: "Motivos e Satisfação", 
+                question: "Que tipo de produto você sentiu falta em nosso catálogo?", 
+                options: ["Modelos básicos e econômicos", "Modelos premium e diferenciados", "Calçados infantis", "Outro"], 
+                type: "choice"
+            },
+            { id: 6, section: "Motivos e Satisfação", question: "Você ficou satisfeito(a) com a qualidade dos produtos?", options: ["Muito satisfeito(a)", "Satisfeito(a)", "Insatisfeito(a)"], type: "choice" },
+            { id: 7, section: "Motivos e Satisfação", question: "Como você avalia nosso atendimento e suporte?", options: ["Excelente", "Bom", "Ruim"], type: "choice" },
+
+            // Seção 3: Logística e frete
+            { id: 9, section: "Logística e Frete", question: "Como você prefere lidar com o frete?", options: ["Pagar um pouco a mais no produto e receber frete grátis", "Pagar menos no produto e arcar com o frete", "Não tenho preferência"], type: "choice" },
+            { id: 10, section: "Logística e Frete", question: "Como você costuma receber seus pedidos?", options: ["Ônibus de excursão", "Correios", "Transportadora particular / motoboy", "Outro"], type: "choice" },
+            { id: 11, section: "Logística e Frete", question: "Em média, quanto você paga de frete por pedido?", options: ["Até R$35", "R$36 a R$50", "R$51 a R$100", "Acima de R$100"], type: "choice" },
+
+            // Seção 4: Preferências e interesse
+            { id: 12, section: "Preferências e Interesse", question: "Quais tipos de produtos você gostaria de encontrar em nosso catálogo?", options: ["Modelos básicos e econômicos", "Modelos premium e diferenciados", "Ambos"], type: "choice" },
+            { id: 13, section: "Preferências e Interesse", question: "Qual canal você prefere para receber novidades e promoções?", options: ["WhatsApp", "E-mail", "Redes sociais"], type: "choice" },
+            { id: 14, section: "Preferências e Interesse", question: "Você estaria interessado(a) em promoções exclusivas para clientes antigos?", options: ["Sim", "Não"], type: "choice" },
+            { id: 15, section: "Preferências e Interesse", question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", options: ["Muito alta", "Média", "Baixa"], type: "choice" },
+            
+            // Pergunta final aberta
+            { id: 8, section: "Opinião Final", question: "Para terminar, que melhoria você gostaria de ver na CJ Rasteirinhas?", type: "open" },
+        ];
+
+        // --- VARIÁVEIS DE ESTADO ---
+        let currentQuestionIndex = 0;
+        let currentUserInfo = {};
+        let userAnswers = [];
+        let history = []; // Armazena o histórico de navegação
+        let totalRespondents = 0; // Para simular um total de pessoas que iniciaram
+        let completedRespondents = []; // Armazena todas as respostas completas
+        let charts = {}; // Para armazenar instâncias dos gráficos
+
+        // --- FUNÇÕES DO QUESTIONÁRIO ---
+
+        function showUserInfoModal() {
+            document.getElementById('user-info-modal').classList.remove('hidden');
+        }
+
+        function submitUserInfo() {
+            const name = document.getElementById('user-name').value.trim();
+            const phone = document.getElementById('user-phone').value.trim();
+            const errorEl = document.getElementById('modal-error');
+            
+            if (!name || !phone) {
+                errorEl.textContent = 'Por favor, preencha todos os campos.';
+                return;
+            }
+            errorEl.textContent = '';
+            
+            currentUserInfo = { name, phone };
+            document.getElementById('user-info-modal').classList.add('hidden');
+            startQuiz();
+        }
+        
+        function startQuiz() {
+            totalRespondents++;
+            history = [0]; // Inicia o histórico com a primeira pergunta
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('question-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            // Limpa o estado anterior
+            document.getElementById('question-card').classList.remove('fade-in');
+            void document.getElementById('question-card').offsetWidth; // Força reflow para reiniciar a animação
+            document.getElementById('question-card').classList.add('fade-in');
+
+            const questionData = quizData[currentQuestionIndex];
+            document.getElementById('section-title').innerText = questionData.section;
+            document.getElementById('question-text').innerText = questionData.question;
+            
+            const optionsContainer = document.getElementById('options-container');
+            const openEndedContainer = document.getElementById('open-ended-container');
+            const nextButton = document.getElementById('next-button');
+            const backButton = document.getElementById('back-button');
+            
+            optionsContainer.innerHTML = '';
+            openEndedContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+
+            // Controla a visibilidade do botão de voltar
+            if (history.length > 1) {
+                backButton.classList.remove('hidden');
+            } else {
+                backButton.classList.add('hidden');
+            }
+
+            if (questionData.type === 'choice') {
+                questionData.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.innerText = option;
+                    button.className = "w-full p-4 border-2 border-gray-300 rounded-lg text-left hover:bg-primary hover:text-white hover:border-primary transition-all duration-300";
+                    button.onclick = () => selectOption(option);
+                    optionsContainer.appendChild(button);
+                });
+            } else if (questionData.type === 'open') {
+                openEndedContainer.classList.remove('hidden');
+                document.getElementById('open-ended-input').value = '';
+                nextButton.classList.remove('hidden');
+            }
+            updateProgressBar();
+        }
+        
+        function selectOption(option) {
+            const currentQuestion = quizData[currentQuestionIndex];
+            userAnswers.push({ question: currentQuestion.question, answer: option, id: currentQuestion.id });
+
+            // Lógica Condicional
+            let nextIndex;
+            const conditionalQuestion = quizData.find(q => q.parentId === currentQuestion.id && q.trigger === option);
+            if (conditionalQuestion) {
+                const index = quizData.indexOf(conditionalQuestion);
+                nextIndex = index;
+            } else {
+                 // Pula para a próxima pergunta não-condicional
+                let tempIndex = currentQuestionIndex + 1;
+                while(quizData[tempIndex] && quizData[tempIndex].parentId) {
+                    tempIndex++;
+                }
+                nextIndex = tempIndex;
+            }
+
+            currentQuestionIndex = nextIndex;
+            history.push(currentQuestionIndex); // Adiciona o novo índice ao histórico
+
+            if (currentQuestionIndex < quizData.length) {
+                setTimeout(showQuestion, 300); // Pequeno delay para efeito visual
+            } else {
+                endQuiz();
+            }
+        }
+
+        function handleNext() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            if (currentQuestion.type === 'open') {
+                const answer = document.getElementById('open-ended-input').value;
+                userAnswers.push({ question: currentQuestion.question, answer: answer || "N/A", id: currentQuestion.id });
+            }
+            currentQuestionIndex++;
+            history.push(currentQuestionIndex); // Adiciona o novo índice ao histórico
+
+            if (currentQuestionIndex < quizData.length) {
+                showQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function endQuiz() {
+            // Salva uma cópia das respostas junto com os dados do usuário
+            completedRespondents.push({ userInfo: currentUserInfo, answers: [...userAnswers] }); 
+            
+            // Reseta para o próximo usuário
+            userAnswers = []; 
+            currentUserInfo = {};
+            currentQuestionIndex = 0;
+            history = []; // Limpa o histórico
+
+            document.getElementById('question-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+        }
+        
+        function updateProgressBar() {
+            const baseQuestions = quizData.filter(q => !q.parentId);
+            const currentBaseQuestion = quizData[currentQuestionIndex];
+            let progressIndex = baseQuestions.findIndex(q => q.id >= currentBaseQuestion.id);
+            if(progressIndex === -1) progressIndex = baseQuestions.length;
+
+            const progress = (progressIndex / baseQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        function goBack() {
+            if (history.length <= 1) return; // Não pode voltar da primeira pergunta
+
+            userAnswers.pop(); // Remove a última resposta
+            history.pop(); // Remove o índice atual do histórico
+
+            currentQuestionIndex = history[history.length - 1]; // Pega o índice anterior
+
+            showQuestion();
+        }
+
+        // --- FUNÇÕES DO PAINEL ---
+
+        function showDashboard() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('dashboard-container').classList.remove('hidden');
+            setupDashboard();
+        }
+        
+        function hideDashboard() {
+            document.getElementById('dashboard-container').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            // Resetar o quiz ao voltar
+            document.getElementById('question-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            updateProgressBar();
+        }
+
+        function setupDashboard() {
+            if (completedRespondents.length === 0) {
+                 // Simular dados se não houver respostas
+                completedRespondents = [
+                    { userInfo: { name: "Maria Silva", phone: "62999998888"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Preço"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Satisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Pagar menos no produto e arcar com o frete"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Média"}]},
+                    { userInfo: { name: "Joana Pereira", phone: "62988887777"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Produto não atendia às minhas necessidades"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Muito satisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Pagar um pouco a mais no produto e receber frete grátis"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Muito alta"}]},
+                    { userInfo: { name: "Ana Costa", phone: "62977776666"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Preço"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Insatisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Não tenho preferência"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Baixa"}]}
+                ];
+                totalRespondents = 5; // Simular que 5 começaram
+            }
+
+            // Métricas Principais
+            document.getElementById('total-responses').innerText = completedRespondents.length;
+            const completionRate = totalRespondents > 0 ? ((completedRespondents.length / totalRespondents) * 100).toFixed(1) : 0;
+            document.getElementById('completion-rate').innerText = `${completionRate}%`;
+            
+            const satisfactionScores = {"Muito satisfeito(a)": 3, "Satisfeito(a)": 2, "Insatisfeito(a)": 1};
+            let totalScore = 0;
+            let satisfactionCount = 0;
+            completedRespondents.forEach(resp => {
+                const satAnswer = resp.answers.find(a => a.id === 6);
+                if(satAnswer && satisfactionScores[satAnswer.answer]) {
+                    totalScore += satisfactionScores[satAnswer.answer];
+                    satisfactionCount++;
+                }
+            });
+            const avgSatisfaction = satisfactionCount > 0 ? (totalScore / satisfactionCount).toFixed(2) : 'N/A';
+            document.getElementById('avg-satisfaction').innerText = avgSatisfaction;
+
+
+            // Configurar Gráficos
+            setupChart('churn-chart', 'pie', 5, 'Principal motivo de não comprar');
+            setupChart('satisfaction-chart', 'doughnut', 6, 'Satisfação com o produto');
+            setupChart('shipping-chart', 'bar', 9, 'Preferência de Frete');
+            setupChart('retention-chart', 'pie', 15, 'Chance de voltar a comprar');
+        }
+
+        function setupChart(canvasId, type, questionId, label) {
+            const questionData = quizData.find(q => q.id === questionId);
+            const answers = completedRespondents.flatMap(resp => resp.answers.find(a => a.id === questionId)?.answer).filter(Boolean);
+            
+            const counts = {};
+            questionData.options.forEach(opt => counts[opt] = 0);
+            answers.forEach(ans => counts[ans] = (counts[ans] || 0) + 1);
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+
+            charts[canvasId] = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{
+                        label: label,
+                        data: Object.values(counts),
+                        backgroundColor: ['#dc2eda', '#f2ea21', '#4ade80', '#60a5fa', '#f87171'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: type === 'bar' ? 'top' : 'right',
+                        }
+                    },
+                    scales: type === 'bar' ? { y: { beginAtZero: true } } : {}
+                }
+            });
+        }
+        
+        function downloadResults() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            const baseHeaders = quizData.filter(q => !q.parentId).map(q => `"${q.question}"`);
+            const headers = `"Nome","Telefone",${baseHeaders.join(',')}`;
+            csvContent += headers + "\r\n";
+
+            completedRespondents.forEach(responseSet => {
+                let row = [`"${responseSet.userInfo.name}"`, `"${responseSet.userInfo.phone}"`];
+                quizData.forEach(q => {
+                    if(!q.parentId) {
+                        const answer = responseSet.answers.find(a => a.id === q.id);
+                        row.push(answer ? `"${answer.answer.replace(/"/g, '""')}"` : '""');
+                    }
+                });
+                csvContent += row.join(',') + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "respostas_cj_rasteirinhas.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('admin') === 'true') {
+                showDashboard();
+            }
+        };
+
+    </script>
+</body>
+</html>
+
+
