@@ -28,7 +28,7 @@
         }
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
 
-        textarea:focus, input:focus {
+        textarea:focus, input:focus, select:focus {
             outline: none;
             box-shadow: 0 0 0 3px rgba(220, 46, 218, 0.4);
             border-color: #dc2eda;
@@ -128,10 +128,19 @@
                 <button onclick="hideDashboard()" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
             </div>
             
-            <div class="flex justify-end mb-4">
-                 <button onclick="downloadResults()" class="bg-primary text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
-                    Exportar Dados (CSV)
-                </button>
+             <div class="flex flex-col md:flex-row justify-end items-center gap-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <label for="export-filter" class="text-sm font-semibold text-gray-600">Exportar Filtro:</label>
+                    <select id="export-filter" class="rounded-lg border-gray-300 p-2 text-sm transition">
+                        <option value="all">Todos os respondentes</option>
+                        <option value="retention-high">Chance de voltar: Muito alta</option>
+                        <option value="retention-medium">Chance de voltar: Média</option>
+                        <option value="retention-low">Chance de voltar: Baixa</option>
+                    </select>
+                </div>
+                <button onclick="downloadResults()" class="bg-primary text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
+                   Exportar Dados (CSV)
+               </button>
             </div>
 
             <!-- Métricas Principais -->
@@ -169,6 +178,25 @@
                     <canvas id="retention-chart"></canvas>
                 </div>
             </div>
+
+            <!-- Lista de Respondentes -->
+            <div class="mt-12">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Lista de Respondentes</h3>
+                <div class="bg-gray-50 rounded-lg shadow-inner max-h-80 overflow-y-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-200 sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 font-semibold text-sm">Nome</th>
+                                <th class="p-3 font-semibold text-sm">Telefone</th>
+                            </tr>
+                        </thead>
+                        <tbody id="respondents-list">
+                            <!-- Linhas serão inseridas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -286,7 +314,7 @@
                 questionData.options.forEach(option => {
                     const button = document.createElement('button');
                     button.innerText = option;
-                    button.className = "w-full p-4 border-2 border-gray-300 rounded-lg text-left hover:bg-primary hover:text-white hover:border-primary transition-all duration-300";
+                    button.className = "w-full p-4 border-2 border-gray-200 rounded-xl text-left shadow-md bg-white hover:border-primary hover:shadow-lg transition-all duration-200";
                     button.onclick = () => selectOption(option);
                     optionsContainer.appendChild(button);
                 });
@@ -431,6 +459,25 @@
             setupChart('satisfaction-chart', 'doughnut', 6, 'Satisfação com o produto');
             setupChart('shipping-chart', 'bar', 9, 'Preferência de Frete');
             setupChart('retention-chart', 'pie', 15, 'Chance de voltar a comprar');
+            
+            // Popular lista de respondentes
+            const respondentsListBody = document.getElementById('respondents-list');
+            respondentsListBody.innerHTML = ''; // Limpar lista antiga
+            if (completedRespondents.length > 0 && completedRespondents[0].userInfo) {
+                completedRespondents.forEach(resp => {
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-gray-200";
+                    row.innerHTML = `
+                        <td class="p-3 text-sm">${resp.userInfo.name}</td>
+                        <td class="p-3 text-sm">${resp.userInfo.phone}</td>
+                    `;
+                    respondentsListBody.appendChild(row);
+                });
+            } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="2" class="p-3 text-center text-gray-500">Nenhuma resposta ainda.</td>`;
+                    respondentsListBody.appendChild(row);
+            }
         }
 
         function setupChart(canvasId, type, questionId, label) {
@@ -472,13 +519,30 @@
         }
         
         function downloadResults() {
+            const filterValue = document.getElementById('export-filter').value;
+            let dataToExport = completedRespondents;
+
+            if (filterValue !== 'all') {
+                const retentionMap = {
+                    'retention-high': 'Muito alta',
+                    'retention-medium': 'Média',
+                    'retention-low': 'Baixa'
+                };
+                const filterAnswer = retentionMap[filterValue];
+                
+                dataToExport = completedRespondents.filter(responseSet => {
+                    const retentionAnswer = responseSet.answers.find(a => a.id === 15);
+                    return retentionAnswer && retentionAnswer.answer === filterAnswer;
+                });
+            }
+
             let csvContent = "data:text/csv;charset=utf-8,";
             
             const baseHeaders = quizData.filter(q => !q.parentId).map(q => `"${q.question}"`);
             const headers = `"Nome","Telefone",${baseHeaders.join(',')}`;
             csvContent += headers + "\r\n";
 
-            completedRespondents.forEach(responseSet => {
+            dataToExport.forEach(responseSet => {
                 let row = [`"${responseSet.userInfo.name}"`, `"${responseSet.userInfo.phone}"`];
                 quizData.forEach(q => {
                     if(!q.parentId) {
@@ -491,8 +555,9 @@
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
+            const timestamp = new Date().toISOString().slice(0, 10);
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "respostas_cj_rasteirinhas.csv");
+            link.setAttribute("download", `respostas_cj_${filterValue}_${timestamp}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
