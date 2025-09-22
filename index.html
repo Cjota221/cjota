@@ -3,511 +3,1467 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pesquisa e Análise - CJ Rasteirinhas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>CRM Leve para WhatsApp</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary-color: #6b7280;
+            --background-color: #f9fafb;
+            --surface-color: #ffffff;
+            --text-color: #111827;
+            --border-color: #e5e7eb;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --font-family: 'Inter', sans-serif;
+            --border-radius: 0.5rem;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-        /* Cores da marca CJ Rasteirinhas */
-        .bg-primary { background-color: #dc2eda; }
-        .bg-accent { background-color: #f2ea21; }
-        .text-primary { color: #dc2eda; }
-        .text-accent { color: #f2ea21; }
-        .border-primary { border-color: #dc2eda; }
-        .ring-primary:focus { ring-color: #dc2eda; }
+
+        .dark-mode {
+            --primary-color: #6366f1;
+            --primary-hover: #818cf8;
+            --secondary-color: #9ca3af;
+            --background-color: #111827;
+            --surface-color: #1f2937;
+            --text-color: #f9fafb;
+            --border-color: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #app {
+            display: flex;
+            height: 100%;
+            transition: opacity 0.3s ease;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 250px;
+            background-color: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease-in-out, background-color 0.3s, border-color 0.3s;
+            flex-shrink: 0;
+            z-index: 1100;
+        }
+
+        .sidebar h1 {
+            font-size: 1.5rem;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--secondary-color);
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
         
-        /* Animações */
+        .sidebar nav a.active,
+        .sidebar nav a:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+         .sidebar nav a svg {
+            transition: stroke 0.2s;
+         }
+        .sidebar nav a.active svg,
+        .sidebar nav a:hover svg {
+            stroke: white;
+        }
+        
+        .sidebar .sidebar-footer {
+            margin-top: auto;
+        }
+
+        /* --- Page Container --- */
+        .page-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: calc(100% - 250px);
+        }
+
+        /* --- Header --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        #global-search-wrapper {
+            position: relative;
+        }
+
+        #global-search {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #global-search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+        }
+        #global-search-wrapper svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+        }
+
+        #theme-switcher {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #theme-switcher:hover {
+            background-color: var(--border-color);
+        }
+
+        #breadcrumb {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .view { display: none; }
+        .view.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
 
-        textarea:focus, input:focus {
+        /* --- Dashboard --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .dashboard-card {
+            background-color: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+        .dashboard-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .dashboard-card-header .icon {
+            background-color: color-mix(in srgb, var(--primary-color) 15%, transparent);
+            color: var(--primary-color);
+            padding: 0.75rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dashboard-card h3 {
+            font-size: 1rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+        .dashboard-card .metric {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        .dashboard-card ul { list-style: none; padding: 0; margin-top: 1rem; }
+        .dashboard-card li { padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        .dashboard-card li:last-child { border-bottom: none; }
+        
+
+        /* --- Componentes --- */
+        .card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .card-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+        .card-header h2 { font-size: 1.5rem; color: var(--text-color); }
+        .card-header p { color: var(--secondary-color); margin-top: 0.25rem; }
+
+        .button {
+            display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem;
+            border: none; border-radius: var(--border-radius); background-color: var(--primary-color);
+            color: white; font-weight: 600; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
+            text-decoration: none; text-align: center; box-shadow: var(--shadow-sm);
+        }
+        .button:hover { background-color: var(--primary-hover); box-shadow: var(--shadow-md); }
+        .button:disabled { background-color: var(--secondary-color); opacity: 0.7; cursor: not-allowed; }
+        .button-secondary { background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--border-color); }
+        .button-secondary:hover { background-color: var(--background-color); }
+        .button-danger { background-color: var(--danger-color); }
+        .button-danger:hover { background-color: #be123c; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        .form-control {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); font-size: 1rem; font-family: var(--font-family);
+            background-color: var(--background-color); color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(220, 46, 218, 0.4);
-            border-color: #dc2eda;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+        }
+        textarea.form-control { min-height: 100px; resize: vertical; }
+
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        th { font-weight: 600; font-size: 0.85rem; color: var(--secondary-color); text-transform: uppercase; }
+        
+        .favorite-star { cursor: pointer; color: var(--border-color); transition: color 0.2s; font-size: 1.25rem; }
+        .favorite-star.favorited { color: var(--warning-color); }
+        .favorite-star:hover { color: var(--warning-color); }
+        
+        #upload-view .upload-box {
+            text-align: center; border: 2px dashed var(--border-color); padding: 4rem;
+            border-radius: var(--border-radius); transition: border-color 0.2s, background-color 0.2s;
+        }
+        #upload-view .upload-box:hover {
+            border-color: var(--primary-color);
+            background-color: color-mix(in srgb, var(--primary-color) 5%, transparent);
+        }
+        #upload-view input[type="file"] { display: none; }
+
+        #clients-view .filters-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem; margin-bottom: 1.5rem; align-items: end;
+        }
+        
+        .pagination { display: flex; justify-content: center; align-items: center; margin-top: 1.5rem; }
+        .pagination button {
+            background: var(--surface-color); border: 1px solid var(--border-color); padding: 0.5rem 1rem;
+            margin: 0 0.25rem; cursor: pointer; border-radius: var(--border-radius); color: var(--text-color);
+        }
+        .pagination button:hover { background-color: var(--background-color); }
+        .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+        
+        #groups-view .group-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);
+            margin-bottom: 1rem; transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        #groups-view .group-item:hover{
+            border-color: color-mix(in srgb, var(--primary-color) 50%, transparent);
+            box-shadow: var(--shadow-md);
+        }
+        #groups-view .group-item .group-actions { display: flex; gap: 0.5rem; }
+
+        /* --- Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background-color: var(--surface-color); padding: 2rem; border-radius: var(--border-radius);
+            width: 90%; max-width: 500px; animation: slideIn 0.3s; box-shadow: var(--shadow-md);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-body {
+            overflow-y: auto;
+        }
+        .modal-content-large { max-width: 950px; width: 95%; height: 90vh; }
+        .modal-content-large .table-responsive { flex-grow: 1; overflow-y: auto; }
+        .client-details-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;
+        }
+        .client-details-grid p { margin-bottom: 0; word-break: break-word; }
+        .client-details-grid strong {
+            display: block; color: var(--secondary-color); font-size: 0.9rem; margin-bottom: 0.25rem;
+        }
+        
+        #client-notes-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        #client-detail-notes-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        .note-item {
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+        }
+        .note-item p {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .note-item .note-date {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-shrink: 0;}
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color); }
+
+        /* Context Menu */
+        #context-menu {
+            position: absolute; display: none; background-color: var(--surface-color);
+            border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 0.5rem 0; z-index: 2000; min-width: 180px;
+        }
+        #context-menu ul { list-style: none; }
+        #context-menu li {
+            padding: 0.75rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem;
+        }
+        #context-menu li:hover { background-color: var(--primary-color); color: white; }
+        #context-menu li:hover svg { stroke: white; }
+
+        /* Notificação */
+        .notification {
+            position: fixed; bottom: 20px; right: 20px; background-color: var(--success-color);
+            color: white; padding: 1rem 1.5rem; border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md); z-index: 3000; opacity: 0;
+            transform: translateY(20px); transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+        .notification.show { opacity: 1; transform: translateY(0); }
+        .notification.error { background-color: var(--danger-color); }
+        
+        /* Import History */
+        #import-history-container {
+            margin-top: 2rem;
+        }
+        #import-history-list {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 0.5rem;
+        }
+        #import-history-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+        #import-history-list li:nth-child(odd) {
+            background-color: var(--background-color);
+        }
+
+        /* --- Responsividade --- */
+        @media (max-width: 992px) {
+             .sidebar {
+                position: fixed;
+                left: 0;
+                height: 100%;
+                transform: translateX(-100%);
+             }
+             .sidebar.open { transform: translateX(0); }
+             .page-container { width: 100%; }
+             #menu-toggle { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 1rem; }
+            #breadcrumb { display: none; }
+            .main-content { padding: 1rem; }
+            .card { padding: 1.5rem; }
+            
+            /* Tabela vira cards */
+            #clients-table thead { display: none; }
+            #clients-table tbody, #clients-table tr, #clients-table td { display: block; width: 100%; }
+            #clients-table tr {
+                background: var(--surface-color); border-radius: var(--border-radius);
+                margin-bottom: 1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+                padding: 1rem;
+            }
+            #clients-table td {
+                padding: 0.5rem 0; border: none; display: flex;
+                justify-content: space-between; align-items: center;
+                border-bottom: 1px solid var(--border-color);
+            }
+            #clients-table tr td:last-child { border-bottom: none; }
+            #clients-table td:before {
+                content: attr(data-label); font-weight: 500; color: var(--secondary-color);
+                margin-right: 1rem;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <!-- Pop-up de Informações do Usuário -->
-    <div id="user-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md text-center fade-in">
-            <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-32 mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-2">Só um instante...</h2>
-            <p class="text-gray-600 mb-6">Para garantir seu presente, por favor, preencha seus dados abaixo.</p>
-            <div class="space-y-4">
-                <input type="text" id="user-name" placeholder="Seu nome completo" class="w-full p-3 border-2 border-gray-300 rounded-lg transition-all duration-300">
-                <input type="tel" id="user-phone" placeholder="Seu WhatsApp (com DDD)" class="w-full p-3 border-2 border-gray-300 rounded-lg transition-all duration-300">
+    <div id="app" style="opacity: 0;">
+        <aside class="sidebar">
+            <h1>CRM Leve</h1>
+            <nav id="main-nav">
+                <a href="#dashboard" class="nav-link" title="Dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#inactivity" class="nav-link" title="Relatório de Inatividade">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Inatividade</span>
+                </a>
+                <a href="#upload" class="nav-link" title="Importar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                    <span>Importar</span>
+                </a>
+                <a href="#clients" class="nav-link" title="Clientes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Clientes</span>
+                </a>
+                <a href="#groups" class="nav-link" title="Grupos">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Grupos</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="reset-data" class="button button-danger" style="width: 100%;">Limpar Dados</button>
             </div>
-             <p id="modal-error" class="text-red-500 text-sm mt-2 h-4"></p>
-            <button onclick="submitUserInfo()" class="w-full mt-4 bg-primary text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
-                Continuar
-            </button>
-        </div>
-    </div>
+        </aside>
 
-
-    <div class="w-full max-w-4xl mx-auto">
-        <!-- Container do Questionário -->
-        <div id="quiz-container" class="bg-white rounded-xl shadow-2xl overflow-hidden">
-            <!-- Cabeçalho -->
-            <div class="p-6 bg-primary text-white text-center">
-                <h1 class="text-2xl md:text-3xl font-bold">Olá! Sentimos sua falta! 👋</h1>
-                <p class="mt-2 text-sm md:text-base">Sua opinião vale um presente incrível! Responda e garanta o seu.</p>
-            </div>
-
-            <div class="p-6 md:p-8">
-                <!-- Barra de Progresso -->
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
-                    <div id="progress-bar" class="bg-accent h-2.5 rounded-full" style="width: 0%; transition: width 0.3s ease-in-out;"></div>
-                </div>
-
-                <!-- Tela de Início -->
-                <div id="start-screen" class="text-center fade-in">
-                    <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-48 mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Sua opinião é muito importante para nós!</h2>
-                    <p class="text-gray-600 mb-8">Em menos de 2 minutos, sua opinião nos ajuda a melhorar e garante um presente duplo para você: <span class="font-bold text-primary">um cupom de R$50 E uma rasteirinha novinha!</span></p>
-                    <button onclick="showUserInfoModal()" class="w-full md:w-auto bg-primary text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
-                        Começar Agora!
+        <div class="page-container">
+            <header class="header">
+                <div class="header-left">
+                    <button id="menu-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
+                    <div id="breadcrumb"></div>
                 </div>
-                
-                <!-- Tela do Questionário -->
-                <div id="question-screen" class="hidden">
-                    <div id="question-card" class="fade-in">
-                        <p id="section-title" class="text-sm font-bold text-primary mb-2 text-center"></p>
-                        <h2 id="question-text" class="text-xl md:text-2xl font-semibold text-gray-800 mb-6 text-center"></h2>
-                        <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                        <div id="open-ended-container" class="mt-4 hidden">
-                             <textarea id="open-ended-input" rows="4" class="w-full p-3 border-2 border-gray-300 rounded-lg transition-all duration-300" placeholder="Sua opinião é valiosa..."></textarea>
-                        </div>
-                        <div class="flex justify-center items-center gap-4 mt-8">
-                            <button id="back-button" onclick="goBack()" class="bg-gray-200 text-gray-700 font-bold py-3 px-12 rounded-lg hover:bg-gray-300 transition-colors duration-300 hidden">
-                                Voltar
-                            </button>
-                            <button id="next-button" onclick="handleNext()" class="bg-primary text-white font-bold py-3 px-12 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300 hidden">
-                                Avançar
-                            </button>
-                        </div>
-                    </div>
+                <div id="global-search-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="search" id="global-search" placeholder="Buscar cliente...">
                 </div>
-
-                <!-- Tela Final -->
-                <div id="end-screen" class="hidden text-center fade-in">
-                    <img src="https://i.ibb.co/cSbHkYCg/logoo-1.png" alt="Logo CJ Rasteirinhas" class="mx-auto w-40 mb-6">
-                    <h2 class="text-2xl font-bold text-primary">Muito Obrigado!</h2>
-                    <p class="text-gray-700 mt-4 mb-6 text-lg">Sua participação nos ajuda a melhorar cada vez mais. Como agradecimento, preparamos um presente especial para você!</p>
-                    
-                    <div class="bg-gray-50 border-2 border-dashed border-primary rounded-lg p-6">
-                        <h3 class="font-bold text-xl text-gray-800 mb-2">Seu Presente Duplo Exclusivo!</h3>
-                        <p class="text-gray-600">Você ganhou! Entre em contato conosco pelo WhatsApp para resgatar seu prêmio:</p>
-                        <div class="text-left my-4 p-4 bg-white rounded-lg shadow-inner">
-                            <p class="mb-2">✅ <span class="font-semibold">Cupom de R$50,00</span> em compras acima de R$300,00.</p>
-                            <p>✅ Uma <span class="font-semibold">linda rasteirinha</span> na sua próxima compra.</p>
-                        </div>
-                        <a href="https://wa.me/5562981480687?text=Olá!%20Respondi%20o%20questionário%20e%20quero%20resgatar%20o%20meu%20presente!" target="_blank" class="inline-block mt-4 bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-600 transform hover:scale-105 transition-transform duration-300">
-                            Resgatar no WhatsApp
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Container do Painel de Análise (Dashboard) -->
-        <div id="dashboard-container" class="hidden mt-8 bg-white rounded-xl shadow-2xl p-6 md:p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Painel de Análise</h2>
-                <button onclick="hideDashboard()" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
-            </div>
-            
-            <div class="flex justify-end mb-4">
-                 <button onclick="downloadResults()" class="bg-primary text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:bg-opacity-90 transform hover:scale-105 transition-transform duration-300">
-                    Exportar Dados (CSV)
+                <button id="theme-switcher" title="Mudar tema">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
-            </div>
+            </header>
 
-            <!-- Métricas Principais -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="bg-gray-100 p-4 rounded-lg text-center">
-                    <h3 class="text-gray-600 text-sm font-semibold">Total de Respostas</h3>
-                    <p id="total-responses" class="text-3xl font-bold text-primary">0</p>
-                </div>
-                 <div class="bg-gray-100 p-4 rounded-lg text-center">
-                    <h3 class="text-gray-600 text-sm font-semibold">Taxa de Conclusão</h3>
-                    <p id="completion-rate" class="text-3xl font-bold text-primary">0%</p>
-                </div>
-                 <div class="bg-gray-100 p-4 rounded-lg text-center">
-                    <h3 class="text-gray-600 text-sm font-semibold">Satisfação Média</h3>
-                    <p id="avg-satisfaction" class="text-3xl font-bold text-primary">N/A</p>
-                </div>
-            </div>
+            <main class="main-content">
+                <section id="dashboard-view" class="view">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-header">
+                                <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
+                                <h3>Total de Clientes</h3>
+                            </div>
+                            <p class="metric" id="db-total-clients">0</p>
+                        </div>
+                         <div class="dashboard-card">
+                            <div class="dashboard-card-header">
+                                <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+                                <div>
+                                    <h3>Clientes Ativos / Inativos</h3>
+                                    <small>Ativos nos últimos 90 dias</small>
+                                </div>
+                            </div>
+                            <p class="metric" id="db-active-inactive">0 / 0</p>
+                        </div>
+                        <div class="dashboard-card">
+                             <div class="dashboard-card-header">
+                                <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg></div>
+                                <h3>Aniversariantes da Semana</h3>
+                            </div>
+                            <p class="metric" id="db-birthday-week">0</p>
+                            <ul id="db-birthday-list"></ul>
+                        </div>
+                        <div class="dashboard-card">
+                             <div class="dashboard-card-header">
+                                <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
+                                <h3>Top 5 Clientes (Maior Compra)</h3>
+                            </div>
+                            <ul id="db-top-clients"></ul>
+                        </div>
+                    </div>
+                </section>
 
-            <!-- Gráficos -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="font-semibold text-gray-700 text-center mb-2">Principal motivo de não comprar</h3>
-                    <canvas id="churn-chart"></canvas>
+                <section id="inactivity-view" class="view">
+                     <div class="card">
+                        <div class="card-header">
+                            <h2>Relatório de Inatividade</h2>
+                            <p>Segmente clientes pelo tempo desde a última compra para campanhas de reativação.</p>
+                        </div>
+                        <div class="dashboard-grid" id="inactivity-report-grid">
+                            <!-- Cards de inatividade serão inseridos aqui -->
+                        </div>
+                    </div>
+                </section>
+
+                <section id="upload-view" class="view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Importar Clientes</h2>
+                            <p>Selecione um arquivo .CSV para adicionar novos clientes à sua base de dados.</p>
+                        </div>
+                        <div id="upload-box" class="upload-box" style="cursor: pointer;">
+                            <input type="file" id="csv-file-input" accept=".csv">
+                            <h3>Clique ou arraste o arquivo aqui</h3>
+                            <p>O sistema identifica contatos duplicados e atualiza com os dados mais recentes.</p>
+                        </div>
+                         <div id="loading-spinner" style="display: none; text-align: center; margin-top: 1rem;">
+                            <p>Processando, por favor aguarde...</p>
+                        </div>
+                    </div>
+
+                    <div id="import-history-container" class="card">
+                        <div class="card-header">
+                             <h2>Histórico de Importações</h2>
+                             <p>Arquivos que já foram processados pelo sistema.</p>
+                        </div>
+                        <ul id="import-history-list"></ul>
+                         <button id="sync-data-btn" class="button" style="margin-top: 1rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                            Sincronizar Dados dos Clientes
+                        </button>
+                    </div>
+                </section>
+
+                <section id="clients-view" class="view">
+                    <div class="card">
+                        <div class="card-header"><h2>Painel de Clientes</h2></div>
+                        <div class="filters-grid">
+                            <div class="form-group">
+                                <label for="sort-by">Ordenar por</label>
+                                <select id="sort-by" class="form-control">
+                                    <option value="total_desc">Maior Compra</option>
+                                    <option value="total_asc">Menor Compra</option>
+                                    <option value="inactive_desc">Mais Inativos</option>
+                                    <option value="inactive_asc">Menos Inativos</option>
+                                    <option value="favorites">Favoritos</option>
+                                </select>
+                            </div>
+                             <div class="form-group">
+                                <label for="filter-state">Filtrar por Estado</label>
+                                <select id="filter-state" class="form-control"><option value="">Todos</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-inactivity">Inativos há (dias)</label>
+                                <input type="number" id="filter-inactivity" class="form-control" placeholder="Ex: 90">
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-birthday-month">Aniversário (Mês)</label>
+                                <select id="filter-birthday-month" class="form-control">
+                                    <option value="">Todos</option><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="filter-last-purchase-year">Ano da Compra</label>
+                                <select id="filter-last-purchase-year" class="form-control"><option value="">Todos</option></select>
+                            </div>
+                            <div class="form-group">
+                                 <button id="apply-filters" class="button" style="width:100%;">Aplicar Filtros</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button id="create-group-btn" class="button" disabled>Criar Grupo</button>
+                            <button id="export-clients-email-btn" class="button button-secondary" disabled>Exportar com E-mail</button>
+                            <button id="filter-today-birthday-btn" class="button button-secondary">Aniversariantes de Hoje</button>
+                        </div>
+                         <p id="filtered-count" style="margin-top: 1rem; color: var(--secondary-color);"></p>
+
+                        <div class="table-responsive">
+                            <table id="clients-table">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Nome</th>
+                                        <th>WhatsApp</th>
+                                        <th>Localização</th>
+                                        <th>Última Compra</th>
+                                        <th>Data Nasc.</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="pagination-controls"></div>
+                    </div>
+                </section>
+                
+                <section id="groups-view" class="view">
+                    <div class="card">
+                         <div class="card-header"><h2>Grupos de Clientes</h2></div>
+                        <div id="group-list"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="create-group-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Criar Novo Grupo</h3><button class="modal-close">&times;</button></div>
+            <div class="form-group">
+                <label for="group-name">Nome do Grupo</label>
+                <input type="text" id="group-name" class="form-control" placeholder="Ex: Clientes Inativos SP">
+                <p style="margin-top: 0.5rem; color: var(--secondary-color);">
+                    Este grupo conterá <strong id="group-client-count">0</strong> clientes.
+                </p>
+            </div><button id="save-group-btn" class="button">Salvar Grupo</button>
+        </div>
+    </div>
+    <div id="rename-group-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Renomear Grupo</h3><button class="modal-close">&times;</button></div>
+            <div class="form-group">
+                <label for="rename-group-name">Novo nome do Grupo</label>
+                <input type="text" id="rename-group-name" class="form-control"><input type="hidden" id="rename-group-id">
+            </div><button id="rename-group-save-btn" class="button">Salvar Alterações</button>
+        </div>
+    </div>
+    <div id="view-group-modal" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header"><h3 id="view-group-name"></h3><button class="modal-close">&times;</button></div>
+            <div class="table-responsive">
+                 <table id="group-clients-table">
+                    <thead><tr><th>Nome</th><th>WhatsApp</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div><button id="export-group-btn" class="button" style="margin-top: 1.5rem;">Exportar (Nome e WhatsApp)</button>
+        </div>
+    </div>
+    <div id="view-client-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><h3 id="client-detail-name"></h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <div class="client-details-grid">
+                    <p><strong>WhatsApp:</strong> <span id="client-detail-whatsapp"></span></p>
+                    <p><strong>E-mail:</strong> <span id="client-detail-email"></span></p>
+                    <p><strong>CPF:</strong> <span id="client-detail-cpf"></span></p>
+                    <p><strong>Endereço:</strong> <span id="client-detail-endereco"></span></p>
+                    <p><strong>Cidade:</strong> <span id="client-detail-cidade"></span></p>
+                    <p><strong>Estado:</strong> <span id="client-detail-estado"></span></p>
+                    <p><strong>Data de Nascimento:</strong> <span id="client-detail-nascimento"></span></p>
+                    <p><strong>Última Compra:</strong> <span id="client-detail-ultima-compra"></span></p>
+                    <p><strong>Total Comprado:</strong> <span id="client-detail-total-comprado"></span></p>
                 </div>
-                <div>
-                    <h3 class="font-semibold text-gray-700 text-center mb-2">Satisfação com o produto</h3>
-                    <canvas id="satisfaction-chart"></canvas>
-                </div>
-                 <div>
-                    <h3 class="font-semibold text-gray-700 text-center mb-2">Preferência de Frete</h3>
-                    <canvas id="shipping-chart"></canvas>
-                </div>
-                 <div>
-                    <h3 class="font-semibold text-gray-700 text-center mb-2">Chance de voltar a comprar</h3>
-                    <canvas id="retention-chart"></canvas>
+                <div id="client-notes-section">
+                    <h3>Histórico e Observações</h3>
+                    <div id="client-detail-notes-list"></div>
+                    <div class="form-group">
+                        <label for="client-note-input">Adicionar Observação</label>
+                        <textarea id="client-note-input" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button id="save-client-note-btn" class="button">Salvar Observação</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+        <ul>
+            <li id="ctx-whatsapp"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span>WhatsApp</span></li>
+            <li id="ctx-email"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><span>Enviar E-mail</span></li>
+            <li id="ctx-details"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>Ver Detalhes</span></li>
+        </ul>
+    </div>
+    <div id="notification" class="notification"></div>
 
     <script>
-        // --- ESTRUTURA DO QUESTIONÁRIO ---
-        const quizData = [
-            // Seção 1: Lembrança e histórico de compras
-            { id: 1, section: "Lembrança e Histórico", question: "Você ainda trabalha com revendas de rasteirinhas femininas?", options: ["Sim", "Não"], type: "choice" },
-            { id: 2, section: "Lembrança e Histórico", question: "Você se lembra de ter comprado conosco antes?", options: ["Sim, várias vezes", "Sim, uma vez", "Não lembro"], type: "choice" },
-            { id: 3, section: "Lembrança e Histórico", question: "Qual tipo de calçado você mais vende?", options: ["Rasteirinhas", "Salto", "Papete / Flat", "Outros"], type: "choice" },
-            { id: 4, section: "Lembrança e Histórico", question: "Qual a faixa de preço média das suas compras?", options: ["Até R$200", "Entre R$201 e R$500", "Entre R$501 e R$1000", "Acima de R$1000"], type: "choice" },
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Estado da Aplicação ---
+            const state = { clients: [], groups: [], importHistory: [], filteredClients: [], currentPage: 1, rowsPerPage: 100, currentGroupIdToExport: null, contextClient: null, currentClientInModal: null };
 
-            // Seção 2: Motivos de não compra e satisfação
-            { 
-                id: 5,
-                section: "Motivos e Satisfação", 
-                question: "Qual o principal motivo de não ter comprado recentemente?", 
-                options: ["Preço", "Atendimento", "Produto não atendia às minhas necessidades", "Esqueci ou perdi contato"], 
-                type: "choice" 
-            },
-             // Pergunta Condicional
-            { 
-                id: 5.1,
-                parentId: 5,
-                trigger: "Produto não atendia às minhas necessidades",
-                section: "Motivos e Satisfação", 
-                question: "Que tipo de produto você sentiu falta em nosso catálogo?", 
-                options: ["Modelos básicos e econômicos", "Modelos premium e diferenciados", "Calçados infantis", "Outro"], 
-                type: "choice"
-            },
-            { id: 6, section: "Motivos e Satisfação", question: "Você ficou satisfeito(a) com a qualidade dos produtos?", options: ["Muito satisfeito(a)", "Satisfeito(a)", "Insatisfeito(a)"], type: "choice" },
-            { id: 7, section: "Motivos e Satisfação", question: "Como você avalia nosso atendimento e suporte?", options: ["Excelente", "Bom", "Ruim"], type: "choice" },
+            // --- Seletores de DOM ---
+            const app = document.getElementById('app');
+            const sidebar = document.querySelector('.sidebar');
+            const menuToggle = document.getElementById('menu-toggle');
+            const mainNav = document.getElementById('main-nav');
+            const breadcrumb = document.getElementById('breadcrumb');
+            const themeSwitcher = document.getElementById('theme-switcher');
+            const globalSearch = document.getElementById('global-search');
+            const views = {
+                dashboard: document.getElementById('dashboard-view'),
+                inactivity: document.getElementById('inactivity-view'),
+                upload: document.getElementById('upload-view'),
+                clients: document.getElementById('clients-view'),
+                groups: document.getElementById('groups-view'),
+            };
+            const uploadBox = document.getElementById('upload-box');
+            const fileInput = document.getElementById('csv-file-input');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const importHistoryList = document.getElementById('import-history-list');
+            const syncDataBtn = document.getElementById('sync-data-btn');
+            const clientsTableBody = document.querySelector('#clients-table tbody');
+            const paginationControls = document.getElementById('pagination-controls');
+            const filteredCountEl = document.getElementById('filtered-count');
+            const sortByEl = document.getElementById('sort-by');
+            const filterStateEl = document.getElementById('filter-state');
+            const filterInactivityEl = document.getElementById('filter-inactivity');
+            const filterBirthdayMonthEl = document.getElementById('filter-birthday-month');
+            const filterLastPurchaseYearEl = document.getElementById('filter-last-purchase-year');
+            const applyFiltersBtn = document.getElementById('apply-filters');
+            const createGroupBtn = document.getElementById('create-group-btn');
+            const exportClientsEmailBtn = document.getElementById('export-clients-email-btn');
+            const filterTodayBirthdayBtn = document.getElementById('filter-today-birthday-btn');
+            const groupListEl = document.getElementById('group-list');
+            const inactivityReportGrid = document.getElementById('inactivity-report-grid');
+            const modals = {
+                createGroup: document.getElementById('create-group-modal'),
+                renameGroup: document.getElementById('rename-group-modal'),
+                viewGroup: document.getElementById('view-group-modal'),
+                viewClient: document.getElementById('view-client-modal'),
+            };
+            const groupNameInput = document.getElementById('group-name');
+            const groupClientCountEl = document.getElementById('group-client-count');
+            const saveGroupBtn = document.getElementById('save-group-btn');
+            const viewGroupNameEl = document.getElementById('view-group-name');
+            const groupClientsTableBody = document.querySelector('#group-clients-table tbody');
+            const exportGroupBtn = document.getElementById('export-group-btn');
+            const renameGroupNameInput = document.getElementById('rename-group-name');
+            const renameGroupIdInput = document.getElementById('rename-group-id');
+            const renameGroupSaveBtn = document.getElementById('rename-group-save-btn');
+            const saveClientNoteBtn = document.getElementById('save-client-note-btn');
+            const contextMenu = document.getElementById('context-menu');
+            const resetDataBtn = document.getElementById('reset-data');
+            const notificationEl = document.getElementById('notification');
 
-            // Seção 3: Logística e frete
-            { id: 9, section: "Logística e Frete", question: "Como você prefere lidar com o frete?", options: ["Pagar um pouco a mais no produto e receber frete grátis", "Pagar menos no produto e arcar com o frete", "Não tenho preferência"], type: "choice" },
-            { id: 10, section: "Logística e Frete", question: "Como você costuma receber seus pedidos?", options: ["Ônibus de excursão", "Correios", "Transportadora particular / motoboy", "Outro"], type: "choice" },
-            { id: 11, section: "Logística e Frete", question: "Em média, quanto você paga de frete por pedido?", options: ["Até R$35", "R$36 a R$50", "R$51 a R$100", "Acima de R$100"], type: "choice" },
-
-            // Seção 4: Preferências e interesse
-            { id: 12, section: "Preferências e Interesse", question: "Quais tipos de produtos você gostaria de encontrar em nosso catálogo?", options: ["Modelos básicos e econômicos", "Modelos premium e diferenciados", "Ambos"], type: "choice" },
-            { id: 13, section: "Preferências e Interesse", question: "Qual canal você prefere para receber novidades e promoções?", options: ["WhatsApp", "E-mail", "Redes sociais"], type: "choice" },
-            { id: 14, section: "Preferências e Interesse", question: "Você estaria interessado(a) em promoções exclusivas para clientes antigos?", options: ["Sim", "Não"], type: "choice" },
-            { id: 15, section: "Preferências e Interesse", question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", options: ["Muito alta", "Média", "Baixa"], type: "choice" },
-            
-            // Pergunta final aberta
-            { id: 8, section: "Opinião Final", question: "Para terminar, que melhoria você gostaria de ver na CJ Rasteirinhas?", type: "open" },
-        ];
-
-        // --- VARIÁVEIS DE ESTADO ---
-        let currentQuestionIndex = 0;
-        let currentUserInfo = {};
-        let userAnswers = [];
-        let history = []; // Armazena o histórico de navegação
-        let totalRespondents = 0; // Para simular um total de pessoas que iniciaram
-        let completedRespondents = []; // Armazena todas as respostas completas
-        let charts = {}; // Para armazenar instâncias dos gráficos
-
-        // --- FUNÇÕES DO QUESTIONÁRIO ---
-
-        function showUserInfoModal() {
-            document.getElementById('user-info-modal').classList.remove('hidden');
-        }
-
-        function submitUserInfo() {
-            const name = document.getElementById('user-name').value.trim();
-            const phone = document.getElementById('user-phone').value.trim();
-            const errorEl = document.getElementById('modal-error');
-            
-            if (!name || !phone) {
-                errorEl.textContent = 'Por favor, preencha todos os campos.';
-                return;
-            }
-            errorEl.textContent = '';
-            
-            currentUserInfo = { name, phone };
-            document.getElementById('user-info-modal').classList.add('hidden');
-            startQuiz();
-        }
-        
-        function startQuiz() {
-            totalRespondents++;
-            history = [0]; // Inicia o histórico com a primeira pergunta
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('question-screen').classList.remove('hidden');
-            showQuestion();
-        }
-
-        function showQuestion() {
-            // Limpa o estado anterior
-            document.getElementById('question-card').classList.remove('fade-in');
-            void document.getElementById('question-card').offsetWidth; // Força reflow para reiniciar a animação
-            document.getElementById('question-card').classList.add('fade-in');
-
-            const questionData = quizData[currentQuestionIndex];
-            document.getElementById('section-title').innerText = questionData.section;
-            document.getElementById('question-text').innerText = questionData.question;
-            
-            const optionsContainer = document.getElementById('options-container');
-            const openEndedContainer = document.getElementById('open-ended-container');
-            const nextButton = document.getElementById('next-button');
-            const backButton = document.getElementById('back-button');
-            
-            optionsContainer.innerHTML = '';
-            openEndedContainer.classList.add('hidden');
-            nextButton.classList.add('hidden');
-
-            // Controla a visibilidade do botão de voltar
-            if (history.length > 1) {
-                backButton.classList.remove('hidden');
-            } else {
-                backButton.classList.add('hidden');
-            }
-
-            if (questionData.type === 'choice') {
-                questionData.options.forEach(option => {
-                    const button = document.createElement('button');
-                    button.innerText = option;
-                    button.className = "w-full p-4 border-2 border-gray-300 rounded-lg text-left hover:bg-primary hover:text-white hover:border-primary transition-all duration-300";
-                    button.onclick = () => selectOption(option);
-                    optionsContainer.appendChild(button);
-                });
-            } else if (questionData.type === 'open') {
-                openEndedContainer.classList.remove('hidden');
-                document.getElementById('open-ended-input').value = '';
-                nextButton.classList.remove('hidden');
-            }
-            updateProgressBar();
-        }
-        
-        function selectOption(option) {
-            const currentQuestion = quizData[currentQuestionIndex];
-            userAnswers.push({ question: currentQuestion.question, answer: option, id: currentQuestion.id });
-
-            // Lógica Condicional
-            let nextIndex;
-            const conditionalQuestion = quizData.find(q => q.parentId === currentQuestion.id && q.trigger === option);
-            if (conditionalQuestion) {
-                const index = quizData.indexOf(conditionalQuestion);
-                nextIndex = index;
-            } else {
-                 // Pula para a próxima pergunta não-condicional
-                let tempIndex = currentQuestionIndex + 1;
-                while(quizData[tempIndex] && quizData[tempIndex].parentId) {
-                    tempIndex++;
+            // --- Funções de Inicialização e Roteamento ---
+            const init = () => {
+                loadDataFromLocalStorage();
+                setupEventListeners();
+                applyTheme();
+                if (state.clients.length > 0) {
+                    populateStateFilter();
+                    populateYearFilter();
+                    state.filteredClients = [...state.clients];
+                    renderAll();
+                    navigateTo('dashboard');
+                } else {
+                    navigateTo('upload');
                 }
-                nextIndex = tempIndex;
-            }
+                app.style.opacity = '1';
+            };
 
-            currentQuestionIndex = nextIndex;
-            history.push(currentQuestionIndex); // Adiciona o novo índice ao histórico
+            const renderAll = () => {
+                renderClientsTable();
+                renderGroups();
+                renderDashboard();
+                renderInactivityReport();
+                renderImportHistory();
+            };
 
-            if (currentQuestionIndex < quizData.length) {
-                setTimeout(showQuestion, 300); // Pequeno delay para efeito visual
-            } else {
-                endQuiz();
-            }
-        }
-
-        function handleNext() {
-            const currentQuestion = quizData[currentQuestionIndex];
-            if (currentQuestion.type === 'open') {
-                const answer = document.getElementById('open-ended-input').value;
-                userAnswers.push({ question: currentQuestion.question, answer: answer || "N/A", id: currentQuestion.id });
-            }
-            currentQuestionIndex++;
-            history.push(currentQuestionIndex); // Adiciona o novo índice ao histórico
-
-            if (currentQuestionIndex < quizData.length) {
-                showQuestion();
-            } else {
-                endQuiz();
-            }
-        }
-
-        function endQuiz() {
-            // Salva uma cópia das respostas junto com os dados do usuário
-            completedRespondents.push({ userInfo: currentUserInfo, answers: [...userAnswers] }); 
-            
-            // Reseta para o próximo usuário
-            userAnswers = []; 
-            currentUserInfo = {};
-            currentQuestionIndex = 0;
-            history = []; // Limpa o histórico
-
-            document.getElementById('question-screen').classList.add('hidden');
-            document.getElementById('end-screen').classList.remove('hidden');
-        }
-        
-        function updateProgressBar() {
-            const baseQuestions = quizData.filter(q => !q.parentId);
-            const currentBaseQuestion = quizData[currentQuestionIndex];
-            let progressIndex = baseQuestions.findIndex(q => q.id >= currentBaseQuestion.id);
-            if(progressIndex === -1) progressIndex = baseQuestions.length;
-
-            const progress = (progressIndex / baseQuestions.length) * 100;
-            document.getElementById('progress-bar').style.width = `${progress}%`;
-        }
-
-        function goBack() {
-            if (history.length <= 1) return; // Não pode voltar da primeira pergunta
-
-            userAnswers.pop(); // Remove a última resposta
-            history.pop(); // Remove o índice atual do histórico
-
-            currentQuestionIndex = history[history.length - 1]; // Pega o índice anterior
-
-            showQuestion();
-        }
-
-        // --- FUNÇÕES DO PAINEL ---
-
-        function showDashboard() {
-            document.getElementById('quiz-container').classList.add('hidden');
-            document.getElementById('dashboard-container').classList.remove('hidden');
-            setupDashboard();
-        }
-        
-        function hideDashboard() {
-            document.getElementById('dashboard-container').classList.add('hidden');
-            document.getElementById('quiz-container').classList.remove('hidden');
-            // Resetar o quiz ao voltar
-            document.getElementById('question-screen').classList.add('hidden');
-            document.getElementById('end-screen').classList.add('hidden');
-            document.getElementById('start-screen').classList.remove('hidden');
-            updateProgressBar();
-        }
-
-        function setupDashboard() {
-            if (completedRespondents.length === 0) {
-                 // Simular dados se não houver respostas
-                completedRespondents = [
-                    { userInfo: { name: "Maria Silva", phone: "62999998888"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Preço"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Satisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Pagar menos no produto e arcar com o frete"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Média"}]},
-                    { userInfo: { name: "Joana Pereira", phone: "62988887777"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Produto não atendia às minhas necessidades"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Muito satisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Pagar um pouco a mais no produto e receber frete grátis"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Muito alta"}]},
-                    { userInfo: { name: "Ana Costa", phone: "62977776666"}, answers: [{id: 5, question: "Qual o principal motivo de não ter comprado recentemente?", answer: "Preço"}, {id: 6, question: "Você ficou satisfeito(a) com a qualidade dos produtos?", answer: "Insatisfeito(a)"}, {id: 9, question: "Como você prefere lidar com o frete?", answer: "Não tenho preferência"}, {id: 15, question: "Qual é a chance de você voltar a comprar conosco nos próximos meses?", answer: "Baixa"}]}
-                ];
-                totalRespondents = 5; // Simular que 5 começaram
-            }
-
-            // Métricas Principais
-            document.getElementById('total-responses').innerText = completedRespondents.length;
-            const completionRate = totalRespondents > 0 ? ((completedRespondents.length / totalRespondents) * 100).toFixed(1) : 0;
-            document.getElementById('completion-rate').innerText = `${completionRate}%`;
-            
-            const satisfactionScores = {"Muito satisfeito(a)": 3, "Satisfeito(a)": 2, "Insatisfeito(a)": 1};
-            let totalScore = 0;
-            let satisfactionCount = 0;
-            completedRespondents.forEach(resp => {
-                const satAnswer = resp.answers.find(a => a.id === 6);
-                if(satAnswer && satisfactionScores[satAnswer.answer]) {
-                    totalScore += satisfactionScores[satAnswer.answer];
-                    satisfactionCount++;
-                }
-            });
-            const avgSatisfaction = satisfactionCount > 0 ? (totalScore / satisfactionCount).toFixed(2) : 'N/A';
-            document.getElementById('avg-satisfaction').innerText = avgSatisfaction;
-
-
-            // Configurar Gráficos
-            setupChart('churn-chart', 'pie', 5, 'Principal motivo de não comprar');
-            setupChart('satisfaction-chart', 'doughnut', 6, 'Satisfação com o produto');
-            setupChart('shipping-chart', 'bar', 9, 'Preferência de Frete');
-            setupChart('retention-chart', 'pie', 15, 'Chance de voltar a comprar');
-        }
-
-        function setupChart(canvasId, type, questionId, label) {
-            const questionData = quizData.find(q => q.id === questionId);
-            const answers = completedRespondents.flatMap(resp => resp.answers.find(a => a.id === questionId)?.answer).filter(Boolean);
-            
-            const counts = {};
-            questionData.options.forEach(opt => counts[opt] = 0);
-            answers.forEach(ans => counts[ans] = (counts[ans] || 0) + 1);
-
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            
-            if (charts[canvasId]) {
-                charts[canvasId].destroy();
-            }
-
-            charts[canvasId] = new Chart(ctx, {
-                type: type,
-                data: {
-                    labels: Object.keys(counts),
-                    datasets: [{
-                        label: label,
-                        data: Object.values(counts),
-                        backgroundColor: ['#dc2eda', '#f2ea21', '#4ade80', '#60a5fa', '#f87171'],
-                        borderColor: '#ffffff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: type === 'bar' ? 'top' : 'right',
-                        }
-                    },
-                    scales: type === 'bar' ? { y: { beginAtZero: true } } : {}
-                }
-            });
-        }
-        
-        function downloadResults() {
-            let csvContent = "data:text/csv;charset=utf-8,";
-            
-            const baseHeaders = quizData.filter(q => !q.parentId).map(q => `"${q.question}"`);
-            const headers = `"Nome","Telefone",${baseHeaders.join(',')}`;
-            csvContent += headers + "\r\n";
-
-            completedRespondents.forEach(responseSet => {
-                let row = [`"${responseSet.userInfo.name}"`, `"${responseSet.userInfo.phone}"`];
-                quizData.forEach(q => {
-                    if(!q.parentId) {
-                        const answer = responseSet.answers.find(a => a.id === q.id);
-                        row.push(answer ? `"${answer.answer.replace(/"/g, '""')}"` : '""');
+            const navigateTo = (viewName) => {
+                Object.values(views).forEach(v => v.classList.remove('active'));
+                if (views[viewName]) views[viewName].classList.add('active');
+                
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if(link.getAttribute('href') === `#${viewName}`) {
+                        link.classList.add('active');
+                        breadcrumb.textContent = `Dashboard > ${link.title}`;
                     }
                 });
-                csvContent += row.join(',') + "\r\n";
-            });
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "respostas_cj_rasteirinhas.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+                if (viewName === 'dashboard') {
+                    renderDashboard();
+                    breadcrumb.textContent = 'Dashboard';
+                }
+                if (viewName === 'inactivity') {
+                    renderInactivityReport();
+                    breadcrumb.textContent = 'Dashboard > Relatório de Inatividade';
+                }
+                 sidebar.classList.remove('open');
+            };
+            
+            // --- Manipulação de Dados (LocalStorage) ---
+            const loadDataFromLocalStorage = () => {
+                state.clients = JSON.parse(localStorage.getItem('crm_clients') || '[]');
+                state.groups = JSON.parse(localStorage.getItem('crm_groups') || '[]');
+                state.importHistory = JSON.parse(localStorage.getItem('crm_import_history') || '[]');
+            };
+            const saveDataToLocalStorage = () => {
+                localStorage.setItem('crm_clients', JSON.stringify(state.clients));
+                localStorage.setItem('crm_groups', JSON.stringify(state.groups));
+                localStorage.setItem('crm_import_history', JSON.stringify(state.importHistory));
+            };
 
-        // --- INICIALIZAÇÃO ---
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('admin') === 'true') {
-                showDashboard();
-            }
-        };
+            // --- Lógica de Upload e Processamento de CSV ---
+            const showNotification = (message, type = 'success', duration = 4000) => {
+                notificationEl.textContent = message;
+                notificationEl.className = `notification ${type} show`;
+                setTimeout(() => notificationEl.classList.remove('show'), duration);
+            };
 
+            const handleFileUpload = (file) => {
+                if (!file || !file.type.match('text/csv')) return showNotification('Por favor, selecione um arquivo .CSV válido.', 'error');
+                loadingSpinner.style.display = 'block';
+                uploadBox.style.display = 'none';
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const csvText = event.target.result;
+                        processAndMergeData(csvText, file.name);
+                        
+                        state.importHistory.push({ filename: file.name, date: new Date().toISOString(), content: csvText });
+                        saveDataToLocalStorage();
+                        
+                        setTimeout(() => {
+                             loadingSpinner.style.display = 'none';
+                             uploadBox.style.display = 'block';
+                             populateStateFilter();
+                             populateYearFilter();
+                             renderAll();
+                        }, 500);
+                    } catch (error) {
+                        showNotification(`Ocorreu um erro: ${error.message}`, 'error');
+                        console.error(error);
+                        loadingSpinner.style.display = 'none';
+                        uploadBox.style.display = 'block';
+                    }
+                };
+                reader.readAsText(file, 'UTF-8');
+            };
+            
+            const processAndMergeData = (csvText, filename) => {
+                const newClients = processCSV(csvText);
+                let addedCount = 0;
+                let updatedCount = 0;
+                let maxId = state.clients.length > 0 ? Math.max(...state.clients.map(c => c.id)) : 0;
+
+                newClients.forEach(newClient => {
+                    if (!newClient.whatsapp) return;
+
+                    const existingClient = state.clients.find(c => c.whatsapp === newClient.whatsapp);
+                    if (existingClient) {
+                        let wasUpdated = false;
+                        const newPurchaseDate = new Date(newClient.dataUltimaCompra);
+                        const existingPurchaseDate = new Date(existingClient.dataUltimaCompra);
+
+                        if (newPurchaseDate > existingPurchaseDate) {
+                            existingClient.dataUltimaCompra = newClient.dataUltimaCompra;
+                            existingClient.totalCompras = newClient.totalCompras;
+                            wasUpdated = true;
+                        }
+
+                        for (const key of ['email', 'cpf', 'endereco', 'cidade', 'estado', 'dataNascimento']) {
+                            if (!existingClient[key] && newClient[key]) {
+                                existingClient[key] = newClient[key];
+                                wasUpdated = true;
+                            }
+                        }
+
+                        if (wasUpdated) updatedCount++;
+
+                    } else {
+                        newClient.id = ++maxId;
+                        state.clients.push(newClient);
+                        addedCount++;
+                    }
+                });
+                
+                showNotification(`"${filename}": ${addedCount} novos clientes. ${updatedCount} atualizados.`);
+            };
+
+            const syncAllData = () => {
+                showNotification('Sincronizando todos os dados...');
+                state.clients = [];
+                const historyCopy = [...state.importHistory];
+                state.importHistory = [];
+                
+                historyCopy.forEach(item => {
+                    processAndMergeData(item.content, item.filename);
+                    state.importHistory.push({ filename: item.filename, date: item.date, content: item.content });
+                });
+                
+                saveDataToLocalStorage();
+                renderAll();
+                showNotification('Sincronização completa!', 'success');
+            };
+
+            const processCSV = (csvText) => {
+                const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== '');
+                if (lines.length < 2) return [];
+                const headerLine = lines[0].replace(/^\uFEFF/, '');
+                const delimiter = (headerLine.match(/;/g) || []).length > (headerLine.match(/,/g) || []).length ? ';' : ',';
+                const headers = headerLine.split(delimiter).map(h => h.trim().replace(/"/g, '').toLowerCase());
+                const dataLines = lines.slice(1);
+                const fieldMappingConfig = {
+                    nome: { aliases: ['nome', 'nome cliente', 'cliente', 'destinatário', 'razão social', 'nome fantasia'], index: -1, required: true },
+                    whatsapp: { aliases: ['whatsapp', 'telefone 2', 'telefone', 'celular', 'telefone principal'], index: -1, required: true },
+                    email: { aliases: ['email', 'e-mail'], index: -1 },
+                    cpf: { aliases: ['cpf', 'cnpj', 'cpf/cnpj'], index: -1 },
+                    endereco: { aliases: ['endereço', 'endereco', 'endereco1'], index: -1 },
+                    estado: { aliases: ['estado', 'uf'], index: -1 },
+                    cidade: { aliases: ['cidade'], index: -1 },
+                    totalCompras: { aliases: ['total compras', 'total com', 'valor total'], index: -1 },
+                    dataNascimento: { aliases: ['data nascimento', 'datanascimento(dd/mm/yyyy)', 'data de aniversário'], index: -1 },
+                    dataUltimaCompra: { aliases: ['última compra', 'ultima compra'], index: -1 }
+                };
+                for (const fieldKey in fieldMappingConfig) {
+                    const config = fieldMappingConfig[fieldKey];
+                    const foundAlias = config.aliases.find(alias => headers.includes(alias));
+                    if (foundAlias) config.index = headers.indexOf(foundAlias);
+                    if (config.required && config.index === -1) throw new Error(`Coluna obrigatória não encontrada: "${config.aliases.join('", "')}"`);
+                }
+                const normalizePhone = (phone) => phone ? phone.replace(/\D/g, '') : '';
+                const cleanData = (data) => data ? data.trim().replace(/"/g, '').replace(/'/g, '') : '';
+                const parseDate = (dateString) => {
+                    if (!dateString) return null;
+                    const parts = dateString.match(/(\d+)/g);
+                    if (!parts || parts.length < 3) return null;
+                    if (parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) return new Date(parts[2], parts[1] - 1, parts[0]);
+                    if (parts[0].length === 4 && parts[1].length <= 2 && parts[2].length <= 2) return new Date(parts[0], parts[1] - 1, parts[2]);
+                    return null;
+                };
+                const clientsData = dataLines.map(line => {
+                    const data = line.split(delimiter);
+                    const nome = fieldMappingConfig.nome.index !== -1 ? cleanData(data[fieldMappingConfig.nome.index]) : 'N/A';
+                    const whatsapp = fieldMappingConfig.whatsapp.index !== -1 ? normalizePhone(cleanData(data[fieldMappingConfig.whatsapp.index])) : '';
+                    let lastPurchase = null;
+                    const lastPurchaseRaw = fieldMappingConfig.dataUltimaCompra.index !== -1 ? cleanData(data[fieldMappingConfig.dataUltimaCompra.index]) : null;
+                    lastPurchase = parseDate(lastPurchaseRaw);
+                    if (!lastPurchase) {
+                        lastPurchase = new Date();
+                        lastPurchase.setDate(lastPurchase.getDate() - Math.floor(Math.random() * 365 * 2));
+                    }
+                    const birthDateRaw = fieldMappingConfig.dataNascimento.index !== -1 ? cleanData(data[fieldMappingConfig.dataNascimento.index]) : null;
+                    const dataNascimento = parseDate(birthDateRaw);
+                    let totalCompras = 0;
+                     if (fieldMappingConfig.totalCompras.index !== -1 && data[fieldMappingConfig.totalCompras.index]) {
+                        const totalComprasRaw = cleanData(data[fieldMappingConfig.totalCompras.index]);
+                        totalCompras = parseFloat(totalComprasRaw.replace(/[R$."]/g, '').replace(',', '.')) || 0;
+                    }
+                    return {
+                        nome, whatsapp, isFavorite: false, notes: [],
+                        email: fieldMappingConfig.email.index !== -1 ? cleanData(data[fieldMappingConfig.email.index]) : '',
+                        cpf: fieldMappingConfig.cpf.index !== -1 ? cleanData(data[fieldMappingConfig.cpf.index]) : '',
+                        endereco: fieldMappingConfig.endereco.index !== -1 ? cleanData(data[fieldMappingConfig.endereco.index]) : '',
+                        estado: fieldMappingConfig.estado.index !== -1 ? cleanData(data[fieldMappingConfig.estado.index]) : 'N/A',
+                        cidade: fieldMappingConfig.cidade.index !== -1 ? cleanData(data[fieldMappingConfig.cidade.index]) : 'N/A',
+                        totalCompras,
+                        dataUltimaCompra: lastPurchase.toISOString(), 
+                        dataNascimento: dataNascimento ? dataNascimento.toISOString() : null 
+                    };
+                });
+                return clientsData.filter(c => c.nome && c.nome !== 'N/A' && c.whatsapp && c.whatsapp.length >= 10);
+            };
+
+            // --- Renderizações ---
+            const renderClientsTable = () => {
+                clientsTableBody.innerHTML = '';
+                if (state.filteredClients.length === 0) {
+                     clientsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Nenhum cliente encontrado.</td></tr>';
+                     renderPagination();
+                     return;
+                }
+                const paginatedClients = state.filteredClients.slice((state.currentPage - 1) * state.rowsPerPage, state.currentPage * state.rowsPerPage);
+                paginatedClients.forEach(client => {
+                    const row = document.createElement('tr');
+                    row.dataset.clientId = client.id;
+                    const lastPurchaseDate = new Date(client.dataUltimaCompra);
+                    const birthDate = client.dataNascimento ? new Date(client.dataNascimento) : null;
+                    row.innerHTML = `
+                        <td data-label=""><span class="favorite-star ${client.isFavorite ? 'favorited' : ''}" data-client-id="${client.id}">&#9733;</span></td>
+                        <td data-label="Nome">${client.nome}</td>
+                        <td data-label="WhatsApp">${client.whatsapp}</td>
+                        <td data-label="Localização">${client.cidade || 'N/A'}, ${client.estado || 'N/A'}</td>
+                        <td data-label="Última Compra">${lastPurchaseDate.toLocaleDateString('pt-BR')}</td>
+                        <td data-label="Data Nasc.">${birthDate ? birthDate.toLocaleDateString('pt-BR') : 'N/A'}</td>
+                        <td data-label="Ações"><button class="button button-secondary view-details-btn" data-client-id="${client.id}">Ver</button></td>
+                    `;
+                    clientsTableBody.appendChild(row);
+                });
+                renderPagination();
+            };
+
+            const renderPagination = () => {
+                paginationControls.innerHTML = '';
+                const totalPages = Math.ceil(state.filteredClients.length / state.rowsPerPage);
+                if (totalPages <= 1) return;
+                const prevButton = document.createElement('button');
+                prevButton.innerText = 'Anterior';
+                prevButton.disabled = state.currentPage === 1;
+                prevButton.onclick = () => { state.currentPage--; renderClientsTable(); };
+                const pageInfo = document.createElement('span');
+                pageInfo.innerText = `Página ${state.currentPage} de ${totalPages}`;
+                const nextButton = document.createElement('button');
+                nextButton.innerText = 'Próxima';
+                nextButton.disabled = state.currentPage === totalPages;
+                nextButton.onclick = () => { state.currentPage++; renderClientsTable(); };
+                paginationControls.append(prevButton, pageInfo, nextButton);
+            };
+
+            const renderGroups = () => {
+                groupListEl.innerHTML = '';
+                if (state.groups.length === 0) return groupListEl.innerHTML = '<p>Nenhum grupo criado ainda. Use os filtros na aba "Clientes" para criar um.</p>';
+                state.groups.forEach(group => {
+                    const groupItem = document.createElement('div');
+                    groupItem.className = 'group-item';
+                    groupItem.innerHTML = `
+                        <div><h3>${group.name}</h3><p>${group.clientIds.length} cliente(s)</p></div>
+                        <div class="group-actions">
+                            <button class="button button-secondary view-group-btn" data-group-id="${group.id}">Ver</button>
+                            <button class="button button-secondary edit-group-btn" data-group-id="${group.id}">Renomear</button>
+                            <button class="button button-danger delete-group-btn" data-group-id="${group.id}">Excluir</button>
+                        </div>`;
+                    groupListEl.appendChild(groupItem);
+                });
+            };
+            
+            const renderImportHistory = () => {
+                importHistoryList.innerHTML = '';
+                 if (state.importHistory.length === 0) {
+                    importHistoryList.innerHTML = `<li>Nenhum arquivo importado ainda.</li>`;
+                    return;
+                }
+                state.importHistory.forEach(item => {
+                    const date = new Date(item.date);
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${item.filename}</span><span style="color: var(--secondary-color)">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</span>`;
+                    importHistoryList.appendChild(li);
+                });
+            };
+            
+            // --- Filtros e Ações ---
+            const applyAllFilters = (searchTerm = null) => {
+                let result = [...state.clients];
+                if (searchTerm) {
+                    const term = searchTerm.toLowerCase();
+                    result = result.filter(c => c.nome.toLowerCase().includes(term) || c.whatsapp.includes(term) || (c.cidade && c.cidade.toLowerCase().includes(term)));
+                } else {
+                    if (filterStateEl.value) result = result.filter(c => c.estado === filterStateEl.value);
+                    if (filterInactivityEl.value) {
+                        const now = new Date();
+                        result = result.filter(c => (now - new Date(c.dataUltimaCompra)) / (1000 * 3600 * 24) > filterInactivityEl.value);
+                    }
+                    if (filterBirthdayMonthEl.value) result = result.filter(c => c.dataNascimento && new Date(c.dataNascimento).getMonth() + 1 === +filterBirthdayMonthEl.value);
+                    if (filterLastPurchaseYearEl.value) result = result.filter(c => c.dataUltimaCompra && new Date(c.dataUltimaCompra).getFullYear() === +filterLastPurchaseYearEl.value);
+                }
+                const sortBy = sortByEl.value;
+                result.sort((a, b) => {
+                    if (sortBy === 'favorites') return (b.isFavorite || 0) - (a.isFavorite || 0);
+                    if (sortBy === 'total_asc') return a.totalCompras - b.totalCompras;
+                    if (sortBy === 'inactive_desc') return new Date(a.dataUltimaCompra) - new Date(b.dataUltimaCompra);
+                    if (sortBy === 'inactive_asc') return new Date(b.dataUltimaCompra) - new Date(a.dataUltimaCompra);
+                    return b.totalCompras - a.totalCompras;
+                });
+                state.filteredClients = result;
+                state.currentPage = 1;
+                filteredCountEl.textContent = `${result.length} cliente(s) encontrado(s).`;
+                createGroupBtn.disabled = result.length === 0;
+                exportClientsEmailBtn.disabled = result.length === 0;
+                renderClientsTable();
+            };
+
+            const populateStateFilter = () => {
+                const states = [...new Set(state.clients.map(c => c.estado))].sort();
+                filterStateEl.innerHTML = '<option value="">Todos</option>';
+                states.forEach(s => { if (s && s.trim()) filterStateEl.innerHTML += `<option value="${s}">${s}</option>`; });
+            };
+            const populateYearFilter = () => {
+                const years = [...new Set(state.clients.map(c => new Date(c.dataUltimaCompra).getFullYear()))].sort((a, b) => b - a);
+                filterLastPurchaseYearEl.innerHTML = '<option value="">Todos</option>';
+                years.forEach(y => filterLastPurchaseYearEl.innerHTML += `<option value="${y}">${y}</option>`);
+            };
+
+            const filterTodayBirthdays = () => {
+                const today = new Date();
+                const day = today.getDate();
+                const month = today.getMonth() + 1;
+                const result = state.clients.filter(c => {
+                    if (!c.dataNascimento) return false;
+                    const birthDate = new Date(c.dataNascimento);
+                    return !isNaN(birthDate.getTime()) && birthDate.getDate() === day && birthDate.getMonth() + 1 === month;
+                });
+                [filterStateEl, filterInactivityEl, filterBirthdayMonthEl, filterLastPurchaseYearEl].forEach(el => el.value = '');
+                sortByEl.value = 'total_desc';
+                state.filteredClients = result;
+                state.currentPage = 1;
+                filteredCountEl.textContent = `${result.length} aniversariante(s) hoje.`;
+                createGroupBtn.disabled = result.length === 0;
+                exportClientsEmailBtn.disabled = result.length === 0;
+                renderClientsTable();
+            };
+
+            const filterByInactivityRange = (minDays, maxDays = Infinity) => {
+                const now = new Date();
+                const result = state.clients.filter(c => {
+                    const diffDays = (now - new Date(c.dataUltimaCompra)) / (1000 * 3600 * 24);
+                    return diffDays >= minDays && diffDays < maxDays;
+                });
+                state.filteredClients = result;
+                state.currentPage = 1;
+                globalSearch.value = '';
+                [filterStateEl, filterInactivityEl, filterBirthdayMonthEl, filterLastPurchaseYearEl].forEach(el => el.value = '');
+                navigateTo('clients');
+                filteredCountEl.textContent = `${result.length} cliente(s) encontrado(s).`;
+                createGroupBtn.disabled = result.length === 0;
+                exportClientsEmailBtn.disabled = result.length === 0;
+                renderClientsTable();
+            };
+            
+            const openModal = (modalId) => modals[modalId].classList.add('active');
+            const closeModal = (modalId) => modals[modalId].classList.remove('active');
+            
+            const saveGroup = () => {
+                const name = groupNameInput.value.trim();
+                if (!name) return showNotification('Por favor, dê um nome ao grupo.', 'error');
+                const newGroup = { id: Date.now(), name, clientIds: state.filteredClients.map(c => c.id) };
+                state.groups.push(newGroup);
+                saveDataToLocalStorage();
+                renderGroups();
+                closeModal('createGroup');
+                navigateTo('groups');
+                showNotification('Grupo criado com sucesso!');
+            };
+
+            const openClientDetailsModal = (clientId) => {
+                const client = state.clients.find(c => c.id === clientId);
+                if (!client) return;
+                
+                state.currentClientInModal = clientId;
+                
+                document.getElementById('client-detail-name').textContent = client.nome || 'N/A';
+                document.getElementById('client-detail-whatsapp').textContent = client.whatsapp || 'N/A';
+                document.getElementById('client-detail-email').textContent = client.email || 'N/A';
+                document.getElementById('client-detail-cpf').textContent = client.cpf || 'N/A';
+                document.getElementById('client-detail-endereco').textContent = client.endereco || 'N/A';
+                document.getElementById('client-detail-cidade').textContent = client.cidade || 'N/A';
+                document.getElementById('client-detail-estado').textContent = client.estado || 'N/A';
+                document.getElementById('client-detail-nascimento').textContent = client.dataNascimento ? new Date(client.dataNascimento).toLocaleDateString('pt-BR') : 'N/A';
+                document.getElementById('client-detail-ultima-compra').textContent = client.dataUltimaCompra ? new Date(client.dataUltimaCompra).toLocaleDateString('pt-BR') : 'N/A';
+                document.getElementById('client-detail-total-comprado').textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(client.totalCompras || 0);
+
+                renderClientNotes(clientId);
+                openModal('viewClient');
+            };
+
+            const renderClientNotes = (clientId) => {
+                const client = state.clients.find(c => c.id === clientId);
+                const notesList = document.getElementById('client-detail-notes-list');
+                notesList.innerHTML = '';
+
+                if (client && client.notes && client.notes.length > 0) {
+                    [...client.notes].reverse().forEach(note => {
+                        const noteEl = document.createElement('div');
+                        noteEl.className = 'note-item';
+                        const noteDate = new Date(note.date);
+                        noteEl.innerHTML = `
+                            <p>${note.text}</p>
+                            <div class="note-date">${noteDate.toLocaleDateString()} ${noteDate.toLocaleTimeString()}</div>
+                        `;
+                        notesList.appendChild(noteEl);
+                    });
+                } else {
+                    notesList.innerHTML = '<p>Nenhuma observação ainda.</p>';
+                }
+            };
+            
+            const saveClientNote = () => {
+                const clientId = state.currentClientInModal;
+                const noteInput = document.getElementById('client-note-input');
+                const noteText = noteInput.value.trim();
+
+                if (!clientId || !noteText) return;
+
+                const client = state.clients.find(c => c.id === clientId);
+                if (client) {
+                    if (!client.notes) client.notes = [];
+                    client.notes.push({ text: noteText, date: new Date().toISOString() });
+                    saveDataToLocalStorage();
+                    renderClientNotes(clientId);
+                    noteInput.value = '';
+                    showNotification('Observação salva!');
+                }
+            };
+
+            const openViewGroupModal = (groupId) => {
+                const group = state.groups.find(g => g.id === groupId);
+                if (!group) return;
+                state.currentGroupIdToExport = group.id;
+                viewGroupNameEl.textContent = `Clientes do Grupo: ${group.name}`;
+                groupClientsTableBody.innerHTML = '';
+                const clientsInGroup = group.clientIds.map(id => state.clients.find(c => c.id === id)).filter(Boolean);
+                clientsInGroup.forEach(client => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${client.nome}</td><td>${client.whatsapp}</td>`;
+                    groupClientsTableBody.appendChild(row);
+                });
+                openModal('viewGroup');
+            };
+
+            const openRenameModal = (groupId) => {
+                const group = state.groups.find(g => g.id === groupId);
+                if (group) {
+                    renameGroupNameInput.value = group.name;
+                    renameGroupIdInput.value = group.id;
+                    openModal('renameGroup');
+                }
+            };
+            
+            const saveGroupName = () => {
+                const groupId = parseInt(renameGroupIdInput.value, 10);
+                const newName = renameGroupNameInput.value.trim();
+                if (!newName) return showNotification('O nome do grupo não pode ser vazio.', 'error');
+                const group = state.groups.find(g => g.id === groupId);
+                if (group) {
+                    group.name = newName;
+                    saveDataToLocalStorage();
+                    renderGroups();
+                    closeModal('renameGroup');
+                    showNotification('Grupo renomeado com sucesso!');
+                }
+            };
+
+            const exportGroupToCSV = (groupId) => {
+                const group = state.groups.find(g => g.id === groupId);
+                if (!group) return;
+                const clientsInGroup = group.clientIds.map(id => state.clients.find(c => c.id === id)).filter(Boolean);
+                let csvContent = "data:text/csv;charset=utf-8,Nome,WhatsApp\r\n";
+                clientsInGroup.forEach(client => {
+                    csvContent += `"${client.nome.replace(/"/g, '""')}",+55${client.whatsapp}\r\n`;
+                });
+                const link = document.createElement("a");
+                link.setAttribute("href", encodeURI(csvContent));
+                link.setAttribute("download", `grupo_${group.name.replace(/\s/g, '_')}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const exportFilteredClientsToCSV = () => {
+                if (state.filteredClients.length === 0) return showNotification('Nenhum cliente para exportar.', 'error');
+                let csvContent = "data:text/csv;charset=utf-8,Nome,WhatsApp,Email\r\n";
+                state.filteredClients.forEach(client => {
+                    csvContent += `"${(client.nome || '').replace(/"/g, '""')}",+55${client.whatsapp},"${(client.email || '').replace(/"/g, '""')}"\r\n`;
+                });
+                const link = document.createElement("a");
+                link.setAttribute("href", encodeURI(csvContent));
+                link.setAttribute("download", `clientes_filtrados.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+            
+            const toggleFavorite = (clientId) => {
+                const client = state.clients.find(c => c.id === clientId);
+                if (client) { client.isFavorite = !client.isFavorite; saveDataToLocalStorage(); renderClientsTable(); }
+            };
+
+            // --- Dashboard & Relatórios ---
+            const renderDashboard = () => {
+                const ninetyDaysAgo = new Date().setDate(new Date().getDate() - 90);
+                const activeClients = state.clients.filter(c => new Date(c.dataUltimaCompra) > ninetyDaysAgo).length;
+                document.getElementById('db-total-clients').textContent = state.clients.length;
+                document.getElementById('db-active-inactive').textContent = `${activeClients} / ${state.clients.length - activeClients}`;
+                
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // start on monday
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+                const birthdayList = document.getElementById('db-birthday-list');
+                birthdayList.innerHTML = '';
+                const weeklyBirthdays = state.clients.filter(c => {
+                    if (!c.dataNascimento) return false;
+                    const birthDate = new Date(c.dataNascimento);
+                    const birthDay = birthDate.getDate();
+                    const birthMonth = birthDate.getMonth();
+                    for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+                        if (d.getDate() === birthDay && d.getMonth() === birthMonth) return true;
+                    }
+                    return false;
+                });
+                document.getElementById('db-birthday-week').textContent = weeklyBirthdays.length;
+                weeklyBirthdays.slice(0, 3).forEach(c => birthdayList.innerHTML += `<li>${c.nome}</li>`);
+                if (weeklyBirthdays.length === 0) birthdayList.innerHTML = `<li>Nenhum na semana.</li>`;
+                
+                const topClientsList = document.getElementById('db-top-clients');
+                topClientsList.innerHTML = '';
+                [...state.clients].sort((a,b) => b.totalCompras - a.totalCompras).slice(0,5).forEach(c => topClientsList.innerHTML += `<li>${c.nome}</li>`);
+            };
+            
+            const renderInactivityReport = () => {
+                const now = new Date();
+                const segments = {
+                    active: { label: "Compraram nos últimos 3 meses", count: 0, min: 0, max: 90 },
+                    warm: { label: "Inativos de 3 a 6 meses", count: 0, min: 90, max: 180 },
+                    cool: { label: "Inativos de 6 meses a 1 ano", count: 0, min: 180, max: 365 },
+                    cold: { label: "Inativos há mais de 1 ano", count: 0, min: 365, max: Infinity }
+                };
+
+                state.clients.forEach(c => {
+                    const diffDays = (now - new Date(c.dataUltimaCompra)) / (1000 * 3600 * 24);
+                    if (diffDays >= 365) segments.cold.count++;
+                    else if (diffDays >= 180) segments.cool.count++;
+                    else if (diffDays >= 90) segments.warm.count++;
+                    else segments.active.count++;
+                });
+
+                inactivityReportGrid.innerHTML = Object.values(segments).map(s => `
+                    <div class="dashboard-card">
+                        <h3>${s.label}</h3>
+                        <p class="metric">${s.count}</p>
+                        <button class="button view-inactivity-group" data-min-days="${s.min}" data-max-days="${s.max}" style="margin-top: 1rem;">Ver Clientes</button>
+                    </div>
+                `).join('');
+            };
+
+            // --- Theme ---
+            const applyTheme = () => {
+                if (localStorage.getItem('crm_theme') === 'dark') document.body.classList.add('dark-mode');
+                else document.body.classList.remove('dark-mode');
+            };
+
+            // --- Event Listeners ---
+            const setupEventListeners = () => {
+                mainNav.addEventListener('click', e => { if(e.target.closest('.nav-link')) { e.preventDefault(); navigateTo(e.target.closest('.nav-link').getAttribute('href').substring(1)); } });
+                menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+                globalSearch.addEventListener('input', e => { navigateTo('clients'); applyAllFilters(e.target.value); });
+                themeSwitcher.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('crm_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); });
+                uploadBox.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', e => handleFileUpload(e.target.files[0]));
+                ['dragover', 'drop'].forEach(evt => uploadBox.addEventListener(evt, e => e.preventDefault()));
+                uploadBox.addEventListener('drop', e => handleFileUpload(e.dataTransfer.files[0]));
+                applyFiltersBtn.addEventListener('click', () => applyAllFilters());
+                syncDataBtn.addEventListener('click', syncAllData);
+                exportClientsEmailBtn.addEventListener('click', exportFilteredClientsToCSV);
+                filterTodayBirthdayBtn.addEventListener('click', filterTodayBirthdays);
+                createGroupBtn.addEventListener('click', () => { groupNameInput.value = ''; groupClientCountEl.textContent = state.filteredClients.length; openModal('createGroup'); });
+                saveGroupBtn.addEventListener('click', saveGroup);
+                groupListEl.addEventListener('click', e => {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+                    const groupId = +target.dataset.groupId;
+                    if (target.classList.contains('delete-group-btn') && confirm('Excluir este grupo?')) { state.groups = state.groups.filter(g => g.id !== groupId); saveDataToLocalStorage(); renderGroups(); }
+                    if (target.classList.contains('view-group-btn')) { openViewGroupModal(groupId); }
+                    if (target.classList.contains('edit-group-btn')) { openRenameModal(groupId); }
+                });
+                clientsTableBody.addEventListener('click', e => {
+                    const target = e.target;
+                    if (target.closest('.view-details-btn')) openClientDetailsModal(+target.closest('.view-details-btn').dataset.clientId);
+                    if (target.closest('.favorite-star')) toggleFavorite(+target.closest('.favorite-star').dataset.clientId);
+                });
+                document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal-overlay').classList.remove('active')));
+                saveClientNoteBtn.addEventListener('click', saveClientNote);
+                renameGroupSaveBtn.addEventListener('click', saveGroupName);
+                exportGroupBtn.addEventListener('click', () => { if (state.currentGroupIdToExport) exportGroupToCSV(state.currentGroupIdToExport); });
+                resetDataBtn.addEventListener('click', () => { if(confirm('Isso apagará TODOS os dados. Deseja continuar?')) { localStorage.clear(); window.location.reload(); } });
+                
+                inactivityReportGrid.addEventListener('click', (e) => {
+                    const target = e.target.closest('.view-inactivity-group');
+                    if (target) {
+                        filterByInactivityRange(+target.dataset.minDays, +target.dataset.maxDays);
+                    }
+                });
+
+                clientsTableBody.addEventListener('contextmenu', e => {
+                    e.preventDefault();
+                    const row = e.target.closest('tr');
+                    if (!row) return;
+                    state.contextClient = state.clients.find(c => c.id === +row.dataset.clientId);
+                    if(!state.contextClient) return;
+                    contextMenu.style.top = `${e.pageY}px`;
+                    contextMenu.style.left = `${e.pageX}px`;
+                    contextMenu.style.display = 'block';
+                });
+                document.addEventListener('click', () => contextMenu.style.display = 'none');
+                contextMenu.addEventListener('click', e => {
+                    if(!state.contextClient) return;
+                    const action = e.target.closest('li').id;
+                    if (action === 'ctx-whatsapp') window.open(`https://wa.me/55${state.contextClient.whatsapp}`, '_blank');
+                    if (action === 'ctx-email' && state.contextClient.email) window.location.href = `mailto:${state.contextClient.email}`;
+                    if (action === 'ctx-details') openClientDetailsModal(state.contextClient.id);
+                });
+            };
+            init();
+        });
     </script>
 </body>
 </html>
-
 
